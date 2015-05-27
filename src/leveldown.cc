@@ -13,63 +13,58 @@
 
 namespace leveldown {
 
-NAN_METHOD(DestroyDB) {
-  NanScope();
+JS_LOCAL_METHOD(DestroyDB) {
+  if (args.Length() < 2 || !args.IsString(0) || !args.IsFunction(1)) {
+    THROW_EXCEPTION("DestroyDB expects (string, function) parameters");
+  }
 
-  NanUtf8String* location = new NanUtf8String(args[0]);
+  jxcore::JXString location;
+  args.GetString(0, &location);
 
-  NanCallback* callback = new NanCallback(
-      v8::Local<v8::Function>::Cast(args[1]));
+  JS_LOCAL_FUNCTION fnc = JS_TYPE_TO_LOCAL_FUNCTION(args.GetAsFunction(1));
+  NanCallback* callback = new NanCallback(fnc);
 
-  DestroyWorker* worker = new DestroyWorker(
-      location
-    , callback
-  );
-
-  NanAsyncQueueWorker(worker);
-
-  NanReturnUndefined();
-}
-
-NAN_METHOD(RepairDB) {
-  NanScope();
-
-  NanUtf8String* location = new NanUtf8String(args[0]);
-
-  NanCallback* callback = new NanCallback(
-      v8::Local<v8::Function>::Cast(args[1]));
-
-  RepairWorker* worker = new RepairWorker(
-      location
-    , callback
-  );
+  location.DisableAutoGC();
+  DestroyWorker* worker = new DestroyWorker(location, callback);
 
   NanAsyncQueueWorker(worker);
+}
+JS_METHOD_END
 
-  NanReturnUndefined();
+JS_LOCAL_METHOD(RepairDB) {
+  if (args.Length() < 2 || !args.IsString(0) || !args.IsFunction(1)) {
+    THROW_EXCEPTION("DestroyDB expects (string, function) parameters");
+  }
+
+  jxcore::JXString location;
+  args.GetString(0, &location);
+
+  JS_LOCAL_FUNCTION fnc = JS_TYPE_TO_LOCAL_FUNCTION(args.GetAsFunction(1));
+  NanCallback* callback = new NanCallback(fnc);
+
+  location.DisableAutoGC();
+
+  RepairWorker* worker = new RepairWorker(location, callback);
+
+  NanAsyncQueueWorker(worker);
+}
+JS_METHOD_END
+
+void RegisterModule(JS_HANDLE_OBJECT_REF target) {
+  JS_ENTER_SCOPE_COM();
+  JS_DEFINE_STATE_MARKER(com);
+
+  Database::Initialize(target);
+  leveldown::Iterator::Initialize(target);
+  leveldown::Batch::Initialize(target);
+
+  JS_LOCAL_FUNCTION leveldown =
+      JS_GET_FUNCTION(JS_NEW_FUNCTION_CALL_TEMPLATE(LevelDOWN));
+
+  JS_METHOD_SET(leveldown, "destroy", DestroyDB);
+  JS_METHOD_SET(leveldown, "repair", RepairDB);
+
+  JS_METHOD_SET(target, "leveldown", LevelDOWN);
 }
 
-void Init (v8::Handle<v8::Object> target) {
-  Database::Init();
-  leveldown::Iterator::Init();
-  leveldown::Batch::Init();
-
-  v8::Local<v8::Function> leveldown =
-      NanNew<v8::FunctionTemplate>(LevelDOWN)->GetFunction();
-
-  leveldown->Set(
-      NanNew("destroy")
-    , NanNew<v8::FunctionTemplate>(DestroyDB)->GetFunction()
-  );
-
-  leveldown->Set(
-      NanNew("repair")
-    , NanNew<v8::FunctionTemplate>(RepairDB)->GetFunction()
-  );
-
-  target->Set(NanNew("leveldown"), leveldown);
-}
-
-NODE_MODULE(leveldown, Init)
-
-} // namespace leveldown
+}  // namespace leveldown

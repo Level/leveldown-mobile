@@ -56,7 +56,7 @@ public:
       Database *database
     , NanCallback *callback
     , leveldb::Slice key
-    , v8::Local<v8::Object> &keyHandle
+    , JS_LOCAL_OBJECT &keyHandle
   );
 
   virtual ~IOWorker ();
@@ -74,7 +74,7 @@ public:
     , leveldb::Slice key
     , bool asBuffer
     , bool fillCache
-    , v8::Local<v8::Object> &keyHandle
+    , JS_LOCAL_OBJECT &keyHandle
   );
 
   virtual ~ReadWorker ();
@@ -94,7 +94,7 @@ public:
     , NanCallback *callback
     , leveldb::Slice key
     , bool sync
-    , v8::Local<v8::Object> &keyHandle
+    , JS_LOCAL_OBJECT &keyHandle
   );
 
   virtual ~DeleteWorker ();
@@ -112,8 +112,8 @@ public:
     , leveldb::Slice key
     , leveldb::Slice value
     , bool sync
-    , v8::Local<v8::Object> &keyHandle
-    , v8::Local<v8::Object> &valueHandle
+    , JS_LOCAL_OBJECT &keyHandle
+    , JS_LOCAL_OBJECT &valueHandle
   );
 
   virtual ~WriteWorker ();
@@ -148,8 +148,8 @@ public:
     , NanCallback *callback
     , leveldb::Slice start
     , leveldb::Slice end
-    , v8::Local<v8::Object> &startHandle
-    , v8::Local<v8::Object> &endHandle
+    , JS_LOCAL_OBJECT &startHandle
+    , JS_LOCAL_OBJECT &endHandle
   );
 
   virtual ~ApproximateSizeWorker ();

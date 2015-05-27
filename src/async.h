@@ -7,7 +7,7 @@
 #define LD_ASYNC_H
 
 #include <node.h>
-#include <nan.h>
+#include "nan.h"
 #include "database.h"
 
 namespace leveldown {
@@ -16,13 +16,17 @@ class Database;
 
 /* abstract */ class AsyncWorker : public NanAsyncWorker {
 public:
+  node::commons *com_;
+
   AsyncWorker (
       leveldown::Database* database
     , NanCallback *callback
   ) : NanAsyncWorker(callback), database(database) {
-    NanScope();
-    v8::Local<v8::Object> obj = NanNew<v8::Object>();
-    NanAssignPersistent(persistentHandle, obj);
+    JS_ENTER_SCOPE_COM();
+    JS_DEFINE_STATE_MARKER(com);
+    com_ = com;
+    JS_LOCAL_OBJECT obj = JS_NEW_EMPTY_OBJECT();
+    persistentHandle = JS_NEW_PERSISTENT_OBJECT(obj);
   }
 
 protected:

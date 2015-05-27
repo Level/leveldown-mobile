@@ -8,11 +8,12 @@
 
 #include <node.h>
 #include <vector>
-#include <nan.h>
+#include "nan.h"
 
 #include "leveldown.h"
 #include "database.h"
 #include "async.h"
+#include "jx_persistent_store.h"
 
 namespace leveldown {
 
@@ -21,11 +22,22 @@ class AsyncWorker;
 
 class Iterator : public node::ObjectWrap {
 public:
-  static void Init ();
-  static v8::Local<v8::Object> NewInstance (
-      v8::Local<v8::Object> database
-    , v8::Local<v8::Number> id
-    , v8::Local<v8::Object> optionsObj
+  static jxcore::ThreadStore<JS_PERSISTENT_FUNCTION_TEMPLATE> jx_persistent;
+
+  INIT_NAMED_CLASS_MEMBERS(Iterator, Iterator) {
+    int id = com->threadId;
+    jx_persistent.templates[id] =
+        JS_NEW_PERSISTENT_FUNCTION_TEMPLATE(constructor);
+
+    SET_INSTANCE_METHOD("next", Iterator::Next, 0);
+    SET_INSTANCE_METHOD("end", Iterator::End, 0);
+  }
+  END_INIT_NAMED_MEMBERS(Iterator)
+
+  static JS_LOCAL_OBJECT NewInstance (
+      JS_LOCAL_OBJECT database
+    , JS_LOCAL_VALUE id
+    , JS_LOCAL_OBJECT optionsObj
   );
 
   Iterator (
@@ -44,7 +56,7 @@ public:
     , bool fillCache
     , bool keyAsBuffer
     , bool valueAsBuffer
-    , v8::Local<v8::Object> &startHandle
+    , JS_LOCAL_OBJECT &startHandle
     , size_t highWaterMark
   );
 
@@ -81,14 +93,14 @@ public:
   AsyncWorker* endWorker;
 
 private:
-  v8::Persistent<v8::Object> persistentHandle;
+  JS_PERSISTENT_OBJECT persistentHandle;
 
   bool Read (std::string& key, std::string& value);
   bool GetIterator ();
 
-  static NAN_METHOD(New);
-  static NAN_METHOD(Next);
-  static NAN_METHOD(End);
+  static DEFINE_JS_METHOD(New);
+  static DEFINE_JS_METHOD(Next);
+  static DEFINE_JS_METHOD(End);
 };
 
 } // namespace leveldown

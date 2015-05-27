@@ -7,7 +7,6 @@
 #define LD_LEVELDOWN_ASYNC_H
 
 #include <node.h>
-
 #include "async.h"
 
 namespace leveldown {
@@ -15,7 +14,7 @@ namespace leveldown {
 class DestroyWorker : public AsyncWorker {
 public:
   DestroyWorker (
-      NanUtf8String* location
+      jxcore::JXString &location
     , NanCallback *callback
   );
 
@@ -23,13 +22,13 @@ public:
   virtual void Execute ();
 
 private:
-  NanUtf8String* location;
+  jxcore::JXString location;
 };
 
 class RepairWorker : public AsyncWorker {
 public:
   RepairWorker (
-      NanUtf8String* location
+      jxcore::JXString &location
     , NanCallback *callback
   );
 
@@ -37,7 +36,7 @@ public:
   virtual void Execute ();
 
 private:
-  NanUtf8String* location;
+  jxcore::JXString location;
 };
 
 } // namespace leveldown

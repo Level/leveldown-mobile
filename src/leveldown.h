@@ -8,99 +8,109 @@
 #include <node.h>
 #include <node_buffer.h>
 #include <leveldb/slice.h>
-#include <nan.h>
 
-static inline size_t StringOrBufferLength(v8::Local<v8::Value> obj) {
-  return (!obj->ToObject().IsEmpty()
-    && node::Buffer::HasInstance(obj->ToObject()))
-    ? node::Buffer::Length(obj->ToObject())
-    : obj->ToString()->Utf8Length();
+static inline size_t StringOrBufferLength(JS_LOCAL_VALUE val) {
+  if (JS_IS_EMPTY(val)) {
+    return 0;
+  } else {
+    JS_LOCAL_OBJECT obj = JS_VALUE_TO_OBJECT(val);
+
+    if (node::Buffer::HasInstance(obj)) {
+      return node::Buffer::Length(obj);
+    } else {
+      JS_LOCAL_STRING str = JS_VALUE_TO_STRING(val);
+      jxcore::JXString jstr(str);
+
+      return jstr.Utf8Length();
+    }
+  }
 }
 
 // NOTE: this MUST be called on objects created by
 // LD_STRING_OR_BUFFER_TO_SLICE
-static inline void DisposeStringOrBufferFromSlice(
-        v8::Persistent<v8::Object> &handle
-      , leveldb::Slice slice) {
-
+static void DisposeStringOrBufferFromSlice(JS_PERSISTENT_OBJECT& handle,
+                                           leveldb::Slice slice) {
+  JS_ENTER_SCOPE_COM();
+  JS_DEFINE_STATE_MARKER(com);
   if (!slice.empty()) {
-    v8::Local<v8::Value> obj = NanNew<v8::Object>(handle)->Get(NanNew<v8::String>("obj"));
-    if (!node::Buffer::HasInstance(obj))
-      delete[] slice.data();
+    if (JS_HAS_NAME(JS_TYPE_TO_LOCAL_OBJECT(handle), JS_STRING_ID("obj"))) {
+      JS_LOCAL_VALUE obj =
+          JS_GET_NAME(JS_TYPE_TO_LOCAL_OBJECT(handle), JS_STRING_ID("obj"));
+      if (!node::Buffer::HasInstance(obj)) delete[] slice.data();
+    } else {
+      if (!node::Buffer::HasInstance(JS_TYPE_TO_LOCAL_OBJECT(handle)))
+        delete[] slice.data();
+    }
   }
 
-  NanDisposePersistent(handle);
+  JS_CLEAR_PERSISTENT(handle);
 }
 
-static inline void DisposeStringOrBufferFromSlice(
-        v8::Local<v8::Value> handle
-      , leveldb::Slice slice) {
+#if defined(JS_ENGINE_V8)
+static void DisposeStringOrBufferFromSlice(JS_LOCAL_VALUE handle,
+                                           leveldb::Slice slice) {
 
   if (!slice.empty() && !node::Buffer::HasInstance(handle))
     delete[] slice.data();
 }
+#endif
 
 // NOTE: must call DisposeStringOrBufferFromSlice() on objects created here
-#define LD_STRING_OR_BUFFER_TO_SLICE(to, from, name)                           \
-  size_t to ## Sz_;                                                            \
-  char* to ## Ch_;                                                             \
-  if (from->IsNull() || from->IsUndefined()) {                                 \
-    to ## Sz_ = 0;                                                             \
-    to ## Ch_ = 0;                                                             \
-  } else if (!from->ToObject().IsEmpty()                                       \
-      && node::Buffer::HasInstance(from->ToObject())) {                        \
-    to ## Sz_ = node::Buffer::Length(from->ToObject());                        \
-    to ## Ch_ = node::Buffer::Data(from->ToObject());                          \
-  } else {                                                                     \
-    v8::Local<v8::String> to ## Str = from->ToString();                        \
-    to ## Sz_ = to ## Str->Utf8Length();                                       \
-    to ## Ch_ = new char[to ## Sz_];                                           \
-    to ## Str->WriteUtf8(                                                      \
-        to ## Ch_                                                              \
-      , -1                                                                     \
-      , NULL, v8::String::NO_NULL_TERMINATION                                  \
-    );                                                                         \
-  }                                                                            \
-  leveldb::Slice to(to ## Ch_, to ## Sz_);
+#define LD_STRING_OR_BUFFER_TO_SLICE(to, from, name)                          \
+  size_t to##Sz_;                                                             \
+  char* to##Ch_;                                                              \
+  {                                                                           \
+    JS_LOCAL_OBJECT __obj__ = JS_VALUE_TO_OBJECT(from);                       \
+    if (JS_IS_NULL_OR_UNDEFINED(__obj__)) {                                   \
+      to##Sz_ = 0;                                                            \
+      to##Ch_ = 0;                                                            \
+    } else if (!JS_IS_EMPTY(__obj__) && node::Buffer::HasInstance(__obj__)) { \
+      to##Sz_ = node::Buffer::Length(__obj__);                                \
+      to##Ch_ = node::Buffer::Data(__obj__);                                  \
+    } else {                                                                  \
+      JS_LOCAL_STRING to##Str = JS_VALUE_TO_STRING(from);                     \
+      jxcore::JXString jx##Str(to##Str);                                      \
+      jx##Str.DisableAutoGC();                                                \
+      to##Ch_ = *jx##Str;                                                     \
+      to##Sz_ = jx##Str.Utf8Length();                                         \
+    }                                                                         \
+  }                                                                           \
+  leveldb::Slice to(to##Ch_, to##Sz_);
 
-#define LD_RETURN_CALLBACK_OR_ERROR(callback, msg)                             \
-  if (!callback.IsEmpty() && callback->IsFunction()) {                         \
-    v8::Local<v8::Value> argv[] = {                                            \
-      NanError(msg)                                                            \
-    };                                                                         \
-    LD_RUN_CALLBACK(callback, 1, argv)                                         \
-    NanReturnUndefined();                                                      \
-  }                                                                            \
-  return NanThrowError(msg);
+#define LD_RETURN_CALLBACK_OR_ERROR(callback, msg)          \
+  if (!JS_IS_EMPTY(callback) && JS_IS_FUNCTION(callback)) { \
+    JS_LOCAL_VALUE argv[] = {JS_NEW_ERROR_VALUE(msg)};      \
+    LD_RUN_CALLBACK(callback, 1, argv)                      \
+    RETURN();                                               \
+  }                                                         \
+  THROW_EXCEPTION(msg);
 
-#define LD_RUN_CALLBACK(callback, argc, argv)                                  \
-  NanMakeCallback(                                                          \
-      NanGetCurrentContext()->Global(), callback, argc, argv);
+#define LD_RUN_CALLBACK(callback, argc, argv) \
+  NanMakeCallback(JS_GET_GLOBAL(), callback, argc, argv);
 
 /* LD_METHOD_SETUP_COMMON setup the following objects:
  *  - Database* database
- *  - v8::Local<v8::Object> optionsObj (may be empty)
+ *  - JS_LOCAL_OBJECT optionsObj (may be empty)
  *  - v8::Persistent<v8::Function> callback (won't be empty)
  * Will throw/return if there isn't a callback in arg 0 or 1
  */
-#define LD_METHOD_SETUP_COMMON(name, optionPos, callbackPos)                   \
-  if (args.Length() == 0)                                                      \
-    return NanThrowError(#name "() requires a callback argument");             \
-  leveldown::Database* database =                                              \
-    node::ObjectWrap::Unwrap<leveldown::Database>(args.This());                \
-  v8::Local<v8::Object> optionsObj;                                            \
-  v8::Local<v8::Function> callback;                                            \
-  if (optionPos == -1 && args[callbackPos]->IsFunction()) {                    \
-    callback = args[callbackPos].As<v8::Function>();                           \
-  } else if (optionPos != -1 && args[callbackPos - 1]->IsFunction()) {         \
-    callback = args[callbackPos - 1].As<v8::Function>();                       \
-  } else if (optionPos != -1                                                   \
-        && args[optionPos]->IsObject()                                         \
-        && args[callbackPos]->IsFunction()) {                                  \
-    optionsObj = args[optionPos].As<v8::Object>();                             \
-    callback = args[callbackPos].As<v8::Function>();                           \
-  } else {                                                                     \
-    return NanThrowError(#name "() requires a callback argument");             \
+#define LD_METHOD_SETUP_COMMON(name, optionPos, callbackPos)        \
+  if (args.Length() == 0)                                           \
+    THROW_EXCEPTION(#name "() requires a callback argument");       \
+  leveldown::Database* database =                                   \
+      node::ObjectWrap::Unwrap<leveldown::Database>(args.This());   \
+  JS_LOCAL_OBJECT optionsObj;                                       \
+  JS_HANDLE_FUNCTION callback;                                       \
+  if (optionPos == -1 && args.IsFunction(callbackPos)) {            \
+    callback = args.GetAsFunction(callbackPos);                     \
+  } else if (optionPos != -1 && args.IsFunction(callbackPos - 1)) { \
+    callback = args.GetAsFunction(callbackPos - 1);                 \
+  } else if (optionPos != -1 && args.IsObject(optionPos) &&         \
+             args.IsFunction(callbackPos)) {                        \
+    optionsObj = JS_VALUE_TO_OBJECT(args.GetItem(optionPos));       \
+    callback = args.GetAsFunction(callbackPos);                     \
+  } else {                                                          \
+    THROW_EXCEPTION(#name "() requires a callback argument");       \
   }
 
 #define LD_METHOD_SETUP_COMMON_ONEARG(name) LD_METHOD_SETUP_COMMON(name, -1, 0)

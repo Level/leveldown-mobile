@@ -12,71 +12,57 @@
 
 namespace leveldown {
 
-static v8::Persistent<v8::FunctionTemplate> iterator_constructor;
+jxcore::ThreadStore<JS_PERSISTENT_FUNCTION_TEMPLATE> Iterator::jx_persistent;
 
-Iterator::Iterator (
-    Database* database
-  , uint32_t id
-  , leveldb::Slice* start
-  , std::string* end
-  , bool reverse
-  , bool keys
-  , bool values
-  , int limit
-  , std::string* lt
-  , std::string* lte
-  , std::string* gt
-  , std::string* gte
-  , bool fillCache
-  , bool keyAsBuffer
-  , bool valueAsBuffer
-  , v8::Local<v8::Object> &startHandle
-  , size_t highWaterMark
-) : database(database)
-  , id(id)
-  , start(start)
-  , end(end)
-  , reverse(reverse)
-  , keys(keys)
-  , values(values)
-  , limit(limit)
-  , lt(lt)
-  , lte(lte)
-  , gt(gt)
-  , gte(gte)
-  , highWaterMark(highWaterMark)
-  , keyAsBuffer(keyAsBuffer)
-  , valueAsBuffer(valueAsBuffer)
-{
-  NanScope();
+Iterator::Iterator(Database* database, uint32_t id, leveldb::Slice* start,
+                   std::string* end, bool reverse, bool keys, bool values,
+                   int limit, std::string* lt, std::string* lte,
+                   std::string* gt, std::string* gte, bool fillCache,
+                   bool keyAsBuffer, bool valueAsBuffer,
+                   JS_LOCAL_OBJECT& startHandle, size_t highWaterMark)
+    : database(database),
+      id(id),
+      start(start),
+      end(end),
+      reverse(reverse),
+      keys(keys),
+      values(values),
+      limit(limit),
+      lt(lt),
+      lte(lte),
+      gt(gt),
+      gte(gte),
+      highWaterMark(highWaterMark),
+      keyAsBuffer(keyAsBuffer),
+      valueAsBuffer(valueAsBuffer) {
+  JS_ENTER_SCOPE_COM();
+  JS_DEFINE_STATE_MARKER(com);
 
-  v8::Local<v8::Object> obj = NanNew<v8::Object>();
-  if (!startHandle.IsEmpty())
-    obj->Set(NanNew("start"), startHandle);
-  NanAssignPersistent(persistentHandle, obj);
+  JS_LOCAL_OBJECT obj = JS_NEW_EMPTY_OBJECT();
+  if (!JS_IS_EMPTY(startHandle))
+    JS_NAME_SET(obj, JS_STRING_ID("start"), startHandle);
 
-  options    = new leveldb::ReadOptions();
+  persistentHandle = JS_NEW_PERSISTENT_OBJECT(obj);
+
+  options = new leveldb::ReadOptions();
   options->fill_cache = fillCache;
   // get a snapshot of the current state
   options->snapshot = database->NewSnapshot();
   dbIterator = NULL;
-  count      = 0;
-  nexting    = false;
-  ended      = false;
-  endWorker  = NULL;
+  count = 0;
+  nexting = false;
+  ended = false;
+  endWorker = NULL;
 };
 
-Iterator::~Iterator () {
+Iterator::~Iterator() {
   delete options;
-  if (!persistentHandle.IsEmpty())
-    NanDisposePersistent(persistentHandle);
-  if (start != NULL)
-    delete start;
-  if (end != NULL)
-    delete end;
+  if (!JS_IS_EMPTY(persistentHandle)) JS_CLEAR_PERSISTENT(persistentHandle);
+  if (start != NULL) delete start;
+  if (end != NULL) delete end;
 };
 
-bool Iterator::GetIterator () {
+bool Iterator::GetIterator() {
   if (dbIterator == NULL) {
     dbIterator = database->NewIterator(options);
 
@@ -91,14 +77,11 @@ bool Iterator::GetIterator () {
           std::string key_ = dbIterator->key().ToString();
 
           if (lt != NULL) {
-            if (lt->compare(key_) <= 0)
-              dbIterator->Prev();
+            if (lt->compare(key_) <= 0) dbIterator->Prev();
           } else if (lte != NULL) {
-            if (lte->compare(key_) < 0)
-              dbIterator->Prev();
+            if (lte->compare(key_) < 0) dbIterator->Prev();
           } else if (start != NULL) {
-            if (start->compare(key_))
-              dbIterator->Prev();
+            if (start->compare(key_)) dbIterator->Prev();
           }
         }
 
@@ -107,8 +90,8 @@ bool Iterator::GetIterator () {
             dbIterator->Prev();
         }
       } else {
-        if (dbIterator->Valid() && gt != NULL
-            && gt->compare(dbIterator->key().ToString()) == 0)
+        if (dbIterator->Valid() && gt != NULL &&
+            gt->compare(dbIterator->key().ToString()) == 0)
           dbIterator->Next();
       }
     } else if (reverse) {
@@ -122,7 +105,7 @@ bool Iterator::GetIterator () {
   return false;
 }
 
-bool Iterator::Read (std::string& key, std::string& value) {
+bool Iterator::Read(std::string& key, std::string& value) {
   // if it's not the first call, move to next item.
   if (!GetIterator()) {
     if (reverse)
@@ -136,19 +119,14 @@ bool Iterator::Read (std::string& key, std::string& value) {
     std::string key_ = dbIterator->key().ToString();
     int isEnd = end == NULL ? 1 : end->compare(key_);
 
-    if ((limit < 0 || ++count <= limit)
-      && (end == NULL
-          || (reverse && (isEnd <= 0))
-          || (!reverse && (isEnd >= 0)))
-      && ( lt  != NULL ? (lt->compare(key_) > 0)
-         : lte != NULL ? (lte->compare(key_) >= 0)
-         : true )
-      && ( gt  != NULL ? (gt->compare(key_) < 0)
-         : gte != NULL ? (gte->compare(key_) <= 0)
-         : true )
-    ) {
-      if (keys)
-        key.assign(dbIterator->key().data(), dbIterator->key().size());
+    if ((limit < 0 || ++count <= limit) &&
+        (end == NULL || (reverse && (isEnd <= 0)) ||
+         (!reverse && (isEnd >= 0))) &&
+        (lt != NULL ? (lt->compare(key_) > 0)
+                    : lte != NULL ? (lte->compare(key_) >= 0) : true) &&
+        (gt != NULL ? (gt->compare(key_) < 0)
+                    : gte != NULL ? (gte->compare(key_) <= 0) : true)) {
+      if (keys) key.assign(dbIterator->key().data(), dbIterator->key().size());
       if (values)
         value.assign(dbIterator->value().data(), dbIterator->value().size());
       return true;
@@ -158,9 +136,10 @@ bool Iterator::Read (std::string& key, std::string& value) {
   return false;
 }
 
-bool Iterator::IteratorNext (std::vector<std::pair<std::string, std::string> >& result) {
+bool Iterator::IteratorNext(
+    std::vector<std::pair<std::string, std::string> >& result) {
   size_t size = 0;
-  while(true) {
+  while (true) {
     std::string key, value;
     bool ok = Read(key, value);
 
@@ -168,8 +147,7 @@ bool Iterator::IteratorNext (std::vector<std::pair<std::string, std::string> >& 
       result.push_back(std::make_pair(key, value));
       size = size + key.size() + value.size();
 
-      if (size > highWaterMark)
-        return true;
+      if (size > highWaterMark) return true;
 
     } else {
       return false;
@@ -177,21 +155,17 @@ bool Iterator::IteratorNext (std::vector<std::pair<std::string, std::string> >& 
   }
 }
 
-leveldb::Status Iterator::IteratorStatus () {
-  return dbIterator->status();
-}
+leveldb::Status Iterator::IteratorStatus() { return dbIterator->status(); }
 
-void Iterator::IteratorEnd () {
-  //TODO: could return it->status()
+void Iterator::IteratorEnd() {
+  // TODO: could return it->status()
   delete dbIterator;
   dbIterator = NULL;
 }
 
-void Iterator::Release () {
-  database->ReleaseIterator(id);
-}
+void Iterator::Release() { database->ReleaseIterator(id); }
 
-void checkEndCallback (Iterator* iterator) {
+void checkEndCallback(Iterator* iterator) {
   iterator->nexting = false;
   if (iterator->endWorker != NULL) {
     NanAsyncQueueWorker(iterator->endWorker);
@@ -199,40 +173,31 @@ void checkEndCallback (Iterator* iterator) {
   }
 }
 
-NAN_METHOD(Iterator::Next) {
-  NanScope();
-
+JS_METHOD(Iterator, Next) {
   Iterator* iterator = node::ObjectWrap::Unwrap<Iterator>(args.This());
 
-  v8::Local<v8::Function> callback = args[0].As<v8::Function>();
+  JS_LOCAL_FUNCTION callback = JS_TYPE_TO_LOCAL_FUNCTION(args.GetAsFunction(0));
 
-  NextWorker* worker = new NextWorker(
-      iterator
-    , new NanCallback(callback)
-    , checkEndCallback
-  );
+  NextWorker* worker =
+      new NextWorker(iterator, new NanCallback(callback), checkEndCallback);
   // persist to prevent accidental GC
-  v8::Local<v8::Object> _this = args.This();
+  JS_LOCAL_OBJECT _this = JS_TYPE_TO_LOCAL_OBJECT(args.This());
   worker->SaveToPersistent("iterator", _this);
   iterator->nexting = true;
   NanAsyncQueueWorker(worker);
 
-  NanReturnValue(args.Holder());
+  RETURN_PARAM(args.Holder());
 }
+JS_METHOD_END
 
-NAN_METHOD(Iterator::End) {
-  NanScope();
-
+JS_METHOD(Iterator, End) {
   Iterator* iterator = node::ObjectWrap::Unwrap<Iterator>(args.This());
 
-  v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(args[0]);
+  JS_LOCAL_FUNCTION callback = JS_TYPE_TO_LOCAL_FUNCTION(args.GetAsFunction(0));
 
-  EndWorker* worker = new EndWorker(
-      iterator
-    , new NanCallback(callback)
-  );
+  EndWorker* worker = new EndWorker(iterator, new NanCallback(callback));
   // persist to prevent accidental GC
-  v8::Local<v8::Object> _this = args.This();
+  JS_LOCAL_OBJECT _this = JS_TYPE_TO_LOCAL_OBJECT(args.This());
   worker->SaveToPersistent("iterator", _this);
   iterator->ended = true;
 
@@ -243,85 +208,82 @@ NAN_METHOD(Iterator::End) {
     NanAsyncQueueWorker(worker);
   }
 
-  NanReturnValue(args.Holder());
+  RETURN_PARAM(args.Holder());
 }
+JS_METHOD_END
 
-void Iterator::Init () {
-  v8::Local<v8::FunctionTemplate> tpl =
-      NanNew<v8::FunctionTemplate>(Iterator::New);
-  NanAssignPersistent(iterator_constructor, tpl);
-  tpl->SetClassName(NanNew("Iterator"));
-  tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "next", Iterator::Next);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "end", Iterator::End);
-}
+JS_LOCAL_OBJECT Iterator::NewInstance(JS_LOCAL_OBJECT database,
+                                      JS_LOCAL_VALUE id,
+                                      JS_LOCAL_OBJECT optionsObj) {
 
-v8::Local<v8::Object> Iterator::NewInstance (
-        v8::Local<v8::Object> database
-      , v8::Local<v8::Number> id
-      , v8::Local<v8::Object> optionsObj
-    ) {
+  JS_ENTER_SCOPE_COM();
+  JS_DEFINE_STATE_MARKER(com);
 
-  NanEscapableScope();
+  JS_LOCAL_OBJECT instance;
 
-  v8::Local<v8::Object> instance;
-  v8::Local<v8::FunctionTemplate> constructorHandle =
-      NanNew<v8::FunctionTemplate>(iterator_constructor);
+  JS_LOCAL_FUNCTION_TEMPLATE constructorHandle =
+      JS_TYPE_TO_LOCAL_FUNCTION_TEMPLATE(
+          Iterator::jx_persistent.templates[com->threadId]);
 
-  if (optionsObj.IsEmpty()) {
-    v8::Handle<v8::Value> argv[2] = { database, id };
-    instance = constructorHandle->GetFunction()->NewInstance(2, argv);
+  if (JS_IS_EMPTY(optionsObj)) {
+    JS_HANDLE_VALUE argv[2] = {database, id};
+    instance = JS_NEW_INSTANCE(JS_GET_FUNCTION(constructorHandle), 2, argv);
   } else {
-    v8::Handle<v8::Value> argv[3] = { database, id, optionsObj };
-    instance = constructorHandle->GetFunction()->NewInstance(3, argv);
+    JS_HANDLE_VALUE argv[3] = {database, id, optionsObj};
+    instance = JS_NEW_INSTANCE(JS_GET_FUNCTION(constructorHandle), 3, argv);
   }
 
-  return NanEscapeScope(instance);
+  return JS_LEAVE_SCOPE(instance);
 }
 
-NAN_METHOD(Iterator::New) {
-  NanScope();
+JS_METHOD(Iterator, New) {
+  JS_LOCAL_OBJECT _this = JS_VALUE_TO_OBJECT(args.GetItem(0));
+  Database* database = node::ObjectWrap::Unwrap<Database>(_this);
 
-  Database* database = node::ObjectWrap::Unwrap<Database>(args[0]->ToObject());
+  // TODO: remove this, it's only here to make LD_STRING_OR_BUFFER_TO_SLICE
+  // happy
+  JS_HANDLE_FUNCTION callback;
 
-  //TODO: remove this, it's only here to make LD_STRING_OR_BUFFER_TO_SLICE happy
-  v8::Handle<v8::Function> callback;
-
-  v8::Local<v8::Object> startHandle;
+  JS_LOCAL_VALUE startHandle;
   leveldb::Slice* start = NULL;
   std::string* end = NULL;
   int limit = -1;
   // default highWaterMark from Readble-streams
   size_t highWaterMark = 16 * 1024;
 
-  v8::Local<v8::Value> id = args[1];
+  JS_LOCAL_VALUE id = JS_TYPE_TO_LOCAL_VALUE(args.GetItem(1));
 
-  v8::Local<v8::Object> optionsObj;
+  JS_LOCAL_OBJECT optionsObj;
 
-  v8::Local<v8::Object> ltHandle;
-  v8::Local<v8::Object> lteHandle;
-  v8::Local<v8::Object> gtHandle;
-  v8::Local<v8::Object> gteHandle;
+  JS_LOCAL_OBJECT ltHandle;
+  JS_LOCAL_OBJECT lteHandle;
+  JS_LOCAL_OBJECT gtHandle;
+  JS_LOCAL_OBJECT gteHandle;
 
   std::string* lt = NULL;
   std::string* lte = NULL;
   std::string* gt = NULL;
   std::string* gte = NULL;
 
-  //default to forward.
+  // default to forward.
   bool reverse = false;
 
-  if (args.Length() > 1 && args[2]->IsObject()) {
-    optionsObj = v8::Local<v8::Object>::Cast(args[2]);
+  if (args.Length() > 1 && args.IsObject(2)) {
+    optionsObj = JS_VALUE_TO_OBJECT(args.GetItem(2));
 
-    reverse = NanBooleanOptionValue(optionsObj, NanNew("reverse"));
+    if (JS_HAS_NAME(optionsObj, JS_STRING_ID("reverse"))) {
+      JS_LOCAL_VALUE obj_ = JS_GET_NAME(optionsObj, JS_STRING_ID("reverse"));
+      reverse = BOOLEAN_TO_STD(obj_);
+    }
 
-    if (optionsObj->Has(NanNew("start"))
-        && (node::Buffer::HasInstance(optionsObj->Get(NanNew("start")))
-          || optionsObj->Get(NanNew("start"))->IsString())) {
+    bool pass = false;
+    if (JS_HAS_NAME(optionsObj, JS_STRING_ID("start"))) {
+      startHandle = JS_GET_NAME(optionsObj, JS_STRING_ID("start"));
+      pass =
+          JS_IS_STRING(startHandle) || node::Buffer::HasInstance(startHandle);
+    }
 
-      startHandle = optionsObj->Get(NanNew("start")).As<v8::Object>();
-
+    if (pass) {
       // ignore start if it has size 0 since a Slice can't have length 0
       if (StringOrBufferLength(startHandle) > 0) {
         LD_STRING_OR_BUFFER_TO_SLICE(_start, startHandle, start)
@@ -329,12 +291,14 @@ NAN_METHOD(Iterator::New) {
       }
     }
 
-    if (optionsObj->Has(NanNew("end"))
-        && (node::Buffer::HasInstance(optionsObj->Get(NanNew("end")))
-          || optionsObj->Get(NanNew("end"))->IsString())) {
+    JS_LOCAL_VALUE endBuffer;
+    pass = false;
+    if (JS_HAS_NAME(optionsObj, JS_STRING_ID("end"))) {
+      endBuffer = JS_GET_NAME(optionsObj, JS_STRING_ID("end"));
+      pass = JS_IS_STRING(endBuffer) || node::Buffer::HasInstance(endBuffer);
+    }
 
-      v8::Local<v8::Value> endBuffer = optionsObj->Get(NanNew("end"));
-
+    if (pass) {
       // ignore end if it has size 0 since a Slice can't have length 0
       if (StringOrBufferLength(endBuffer) > 0) {
         LD_STRING_OR_BUFFER_TO_SLICE(_end, endBuffer, end)
@@ -342,114 +306,99 @@ NAN_METHOD(Iterator::New) {
       }
     }
 
-    if (!optionsObj.IsEmpty() && optionsObj->Has(NanNew("limit"))) {
-      limit = v8::Local<v8::Integer>::Cast(optionsObj->Get(
-          NanNew("limit")))->Value();
+    if (JS_HAS_NAME(optionsObj, JS_STRING_ID("limit"))) {
+      JS_LOCAL_VALUE obj_ = JS_GET_NAME(optionsObj, JS_STRING_ID("limit"));
+      limit = INTEGER_TO_STD(obj_);
     }
 
-    if (optionsObj->Has(NanNew("highWaterMark"))) {
-      highWaterMark = v8::Local<v8::Integer>::Cast(optionsObj->Get(
-            NanNew("highWaterMark")))->Value();
+    if (JS_HAS_NAME(optionsObj, JS_STRING_ID("highWaterMark"))) {
+      JS_LOCAL_VALUE obj_ =
+          JS_GET_NAME(optionsObj, JS_STRING_ID("highWaterMark"));
+      highWaterMark = INTEGER_TO_STD(obj_);
     }
 
-    if (optionsObj->Has(NanNew("lt"))
-        && (node::Buffer::HasInstance(optionsObj->Get(NanNew("lt")))
-          || optionsObj->Get(NanNew("lt"))->IsString())) {
+    JS_LOCAL_VALUE ltBuffer;
+    pass = false;
+    if (JS_HAS_NAME(optionsObj, JS_STRING_ID("lt"))) {
+      ltBuffer = JS_GET_NAME(optionsObj, JS_STRING_ID("lt"));
+      pass = JS_IS_STRING(ltBuffer) || node::Buffer::HasInstance(ltBuffer);
+    }
 
-      v8::Local<v8::Value> ltBuffer = optionsObj->Get(NanNew("lt"));
-
+    if (pass) {
       // ignore end if it has size 0 since a Slice can't have length 0
       if (StringOrBufferLength(ltBuffer) > 0) {
         LD_STRING_OR_BUFFER_TO_SLICE(_lt, ltBuffer, lt)
         lt = new std::string(_lt.data(), _lt.size());
-        if (reverse)
-          start = new leveldb::Slice(_lt.data(), _lt.size());
+        if (reverse) start = new leveldb::Slice(_lt.data(), _lt.size());
       }
     }
 
-    if (optionsObj->Has(NanNew("lte"))
-        && (node::Buffer::HasInstance(optionsObj->Get(NanNew("lte")))
-          || optionsObj->Get(NanNew("lte"))->IsString())) {
+    JS_LOCAL_VALUE lteBuffer;
+    pass = false;
+    if (JS_HAS_NAME(optionsObj, JS_STRING_ID("lte"))) {
+      lteBuffer = JS_GET_NAME(optionsObj, JS_STRING_ID("lte"));
+      pass = JS_IS_STRING(lteBuffer) || node::Buffer::HasInstance(lteBuffer);
+    }
 
-      v8::Local<v8::Value> lteBuffer = optionsObj->Get(NanNew("lte"));
-
+    if (pass) {
       // ignore end if it has size 0 since a Slice can't have length 0
       if (StringOrBufferLength(lteBuffer) > 0) {
         LD_STRING_OR_BUFFER_TO_SLICE(_lte, lteBuffer, lte)
         lte = new std::string(_lte.data(), _lte.size());
-        if (reverse)
-          start = new leveldb::Slice(_lte.data(), _lte.size());
+        if (reverse) start = new leveldb::Slice(_lte.data(), _lte.size());
       }
     }
 
-    if (optionsObj->Has(NanNew("gt"))
-        && (node::Buffer::HasInstance(optionsObj->Get(NanNew("gt")))
-          || optionsObj->Get(NanNew("gt"))->IsString())) {
+    JS_LOCAL_VALUE gtBuffer;
+    pass = false;
+    if (JS_HAS_NAME(optionsObj, JS_STRING_ID("gt"))) {
+      gtBuffer = JS_GET_NAME(optionsObj, JS_STRING_ID("gt"));
+      pass = JS_IS_STRING(gtBuffer) || node::Buffer::HasInstance(gtBuffer);
+    }
 
-      v8::Local<v8::Value> gtBuffer = optionsObj->Get(NanNew("gt"));
-
+    if (pass) {
       // ignore end if it has size 0 since a Slice can't have length 0
       if (StringOrBufferLength(gtBuffer) > 0) {
         LD_STRING_OR_BUFFER_TO_SLICE(_gt, gtBuffer, gt)
         gt = new std::string(_gt.data(), _gt.size());
-        if (!reverse)
-          start = new leveldb::Slice(_gt.data(), _gt.size());
+        if (!reverse) start = new leveldb::Slice(_gt.data(), _gt.size());
       }
     }
 
-    if (optionsObj->Has(NanNew("gte"))
-        && (node::Buffer::HasInstance(optionsObj->Get(NanNew("gte")))
-          || optionsObj->Get(NanNew("gte"))->IsString())) {
+    JS_LOCAL_VALUE gteBuffer;
+    pass = false;
+    if (JS_HAS_NAME(optionsObj, JS_STRING_ID("gte"))) {
+      gteBuffer = JS_GET_NAME(optionsObj, JS_STRING_ID("gte"));
+      pass = JS_IS_STRING(gteBuffer) || node::Buffer::HasInstance(gteBuffer);
+    }
 
-      v8::Local<v8::Value> gteBuffer = optionsObj->Get(NanNew("gte"));
-
+    if (pass) {
       // ignore end if it has size 0 since a Slice can't have length 0
       if (StringOrBufferLength(gteBuffer) > 0) {
         LD_STRING_OR_BUFFER_TO_SLICE(_gte, gteBuffer, gte)
         gte = new std::string(_gte.data(), _gte.size());
-        if (!reverse)
-          start = new leveldb::Slice(_gte.data(), _gte.size());
+        if (!reverse) start = new leveldb::Slice(_gte.data(), _gte.size());
       }
     }
-
   }
 
-  bool keys = NanBooleanOptionValue(optionsObj, NanNew("keys"), true);
-  bool values = NanBooleanOptionValue(optionsObj, NanNew("values"), true);
-  bool keyAsBuffer = NanBooleanOptionValue(
-      optionsObj
-    , NanNew("keyAsBuffer")
-    , true
-  );
-  bool valueAsBuffer = NanBooleanOptionValue(
-      optionsObj
-    , NanNew("valueAsBuffer")
-    , true
-  );
-  bool fillCache = NanBooleanOptionValue(optionsObj, NanNew("fillCache"));
+  OPTIONS_TO_BOOLEAN(keys, true);
+  OPTIONS_TO_BOOLEAN(values, true);
+  OPTIONS_TO_BOOLEAN(keyAsBuffer, true);
+  OPTIONS_TO_BOOLEAN(valueAsBuffer, true);
+  OPTIONS_TO_BOOLEAN(fillCache, true);
 
-  Iterator* iterator = new Iterator(
-      database
-    , (uint32_t)id->Int32Value()
-    , start
-    , end
-    , reverse
-    , keys
-    , values
-    , limit
-    , lt
-    , lte
-    , gt
-    , gte
-    , fillCache
-    , keyAsBuffer
-    , valueAsBuffer
-    , startHandle
-    , highWaterMark
-  );
-  iterator->Wrap(args.This());
+  JS_CLASS_NEW_INSTANCE(obj, Iterator);
 
-  NanReturnValue(args.This());
+  JS_LOCAL_OBJECT shObj = JS_VALUE_TO_OBJECT(startHandle);
+  Iterator* iterator =
+      new Iterator(database, (uint32_t)id->Int32Value(), start, end, reverse,
+                   keys, values, limit, lt, lte, gt, gte, fillCache,
+                   keyAsBuffer, valueAsBuffer, shObj, highWaterMark);
+  iterator->Wrap(obj);
+
+  RETURN_PARAM(obj);
 }
+JS_METHOD_END
 
-} // namespace leveldown
+}  // namespace leveldown

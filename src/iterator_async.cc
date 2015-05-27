@@ -33,44 +33,47 @@ void NextWorker::Execute () {
 }
 
 void NextWorker::HandleOKCallback () {
+  JS_ENTER_SCOPE_COM();
+  JS_DEFINE_STATE_MARKER(com);
   size_t idx = 0;
 
   size_t arraySize = result.size() * 2;
-  v8::Local<v8::Array> returnArray = NanNew<v8::Array>(arraySize);
+  JS_LOCAL_ARRAY returnArray = JS_NEW_ARRAY_WITH_COUNT(arraySize);
 
   for(idx = 0; idx < result.size(); ++idx) {
     std::pair<std::string, std::string> row = result[idx];
     std::string key = row.first;
     std::string value = row.second;
 
-    v8::Local<v8::Value> returnKey;
+    JS_LOCAL_VALUE returnKey;
     if (iterator->keyAsBuffer) {
-      returnKey = NanNewBufferHandle((char*)key.data(), key.size());
+      returnKey = JS_TYPE_TO_LOCAL_VALUE(node::Buffer::New((char*)key.data(), key.size(), com)->handle_);
     } else {
-      returnKey = NanNew<v8::String>((char*)key.data(), key.size());
+      returnKey = UTF8_TO_STRING_WITH_LENGTH((char*)key.data(), key.size());
     }
 
-    v8::Local<v8::Value> returnValue;
+    JS_LOCAL_VALUE returnValue;
     if (iterator->valueAsBuffer) {
-      returnValue = NanNewBufferHandle((char*)value.data(), value.size());
+      returnValue = JS_TYPE_TO_LOCAL_VALUE(node::Buffer::New((char*)value.data(), value.size(), com)->handle_);
     } else {
-      returnValue = NanNew<v8::String>((char*)value.data(), value.size());
+      returnValue = UTF8_TO_STRING_WITH_LENGTH((char*)value.data(), value.size());
     }
 
     // put the key & value in a descending order, so that they can be .pop:ed in javascript-land
-    returnArray->Set(NanNew<v8::Integer>(static_cast<int>(arraySize - idx * 2 - 1)), returnKey);
-    returnArray->Set(NanNew<v8::Integer>(static_cast<int>(arraySize - idx * 2 - 2)), returnValue);
+    JS_INDEX_SET(returnArray, (static_cast<int>(arraySize - idx * 2 - 1)), returnKey);
+    JS_INDEX_SET(returnArray, (static_cast<int>(arraySize - idx * 2 - 2)), returnValue);
   }
 
   // clean up & handle the next/end state see iterator.cc/checkEndCallback
   localCallback(iterator);
 
-  v8::Local<v8::Value> argv[] = {
-      NanNull()
+  JS_LOCAL_VALUE argv[] = {
+      JS_NULL()
     , returnArray
     // when ok === false all data has been read, so it's then finished
-    , NanNew<v8::Boolean>(!ok)
+    , STD_TO_BOOLEAN(!ok)
   };
+
   callback->Call(3, argv);
 }
 

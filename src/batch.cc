@@ -1,6 +1,6 @@
 #include <node.h>
 #include <node_buffer.h>
-#include <nan.h>
+#include "nan.h"
 
 #include "database.h"
 #include "batch_async.h"
@@ -8,145 +8,138 @@
 
 namespace leveldown {
 
-static v8::Persistent<v8::FunctionTemplate> batch_constructor;
+jxcore::ThreadStore<JS_PERSISTENT_FUNCTION_TEMPLATE> Batch::jx_persistent;
 
-Batch::Batch (leveldown::Database* database, bool sync) : database(database) {
+Batch::Batch(leveldown::Database* database, bool sync) : database(database) {
   options = new leveldb::WriteOptions();
   options->sync = sync;
   batch = new leveldb::WriteBatch();
   hasData = false;
 }
 
-Batch::~Batch () {
+Batch::~Batch() {
   delete options;
   delete batch;
 }
 
-leveldb::Status Batch::Write () {
+leveldb::Status Batch::Write() {
   return database->WriteBatchToDatabase(options, batch);
 }
 
-void Batch::Init () {
-  v8::Local<v8::FunctionTemplate> tpl = NanNew<v8::FunctionTemplate>(Batch::New);
-  NanAssignPersistent(batch_constructor, tpl);
-  tpl->SetClassName(NanNew("Batch"));
-  tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "put", Batch::Put);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "del", Batch::Del);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "clear", Batch::Clear);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "write", Batch::Write);
-}
+JS_METHOD(Batch, New) {
+  JS_CLASS_NEW_INSTANCE(obj, Batch);
 
-NAN_METHOD(Batch::New) {
-  NanScope();
+  JS_LOCAL_OBJECT objwrap = JS_VALUE_TO_OBJECT(args.GetItem(0));
+  Database* database = node::ObjectWrap::Unwrap<Database>(objwrap);
+  JS_LOCAL_OBJECT optionsObj;
 
-  Database* database = node::ObjectWrap::Unwrap<Database>(args[0]->ToObject());
-  v8::Local<v8::Object> optionsObj;
-
-  if (args.Length() > 1 && args[1]->IsObject()) {
-    optionsObj = v8::Local<v8::Object>::Cast(args[1]);
+  if (args.Length() > 1 && args.IsObject(1)) {
+    optionsObj = JS_VALUE_TO_OBJECT(args.GetItem(1));
   }
 
-  bool sync = NanBooleanOptionValue(optionsObj, NanNew("sync"));
+  bool sync = BOOLEAN_TO_STD(JS_GET_NAME(optionsObj, JS_STRING_ID("sync")));
 
   Batch* batch = new Batch(database, sync);
-  batch->Wrap(args.This());
+  batch->Wrap(obj);
 
-  NanReturnValue(args.This());
+  RETURN_PARAM(obj);
 }
+JS_METHOD_END
 
-v8::Handle<v8::Value> Batch::NewInstance (
-        v8::Handle<v8::Object> database
-      , v8::Handle<v8::Object> optionsObj
-    ) {
+JS_HANDLE_VALUE Batch::NewInstance(JS_HANDLE_OBJECT_REF database,
+                                   JS_HANDLE_OBJECT_REF optionsObj) {
+  JS_ENTER_SCOPE_COM();
 
-  NanEscapableScope();
+  JS_LOCAL_OBJECT instance;
+  JS_LOCAL_FUNCTION_TEMPLATE constructorHandle =
+      JS_TYPE_TO_LOCAL_FUNCTION_TEMPLATE(
+          jx_persistent.templates[com->threadId]);
 
-  v8::Local<v8::Object> instance;
-
-  v8::Local<v8::FunctionTemplate> constructorHandle =
-      NanNew<v8::FunctionTemplate>(batch_constructor);
-
-  if (optionsObj.IsEmpty()) {
-    v8::Handle<v8::Value> argv[1] = { database };
-    instance = constructorHandle->GetFunction()->NewInstance(1, argv);
+  JS_LOCAL_FUNCTION fnc = JS_GET_FUNCTION(constructorHandle);
+  if (JS_IS_EMPTY(optionsObj)) {
+    JS_HANDLE_VALUE argv[1] = {database};
+    instance = JS_NEW_INSTANCE(fnc, 1, argv);
   } else {
-    v8::Handle<v8::Value> argv[2] = { database, optionsObj };
-    instance = constructorHandle->GetFunction()->NewInstance(2, argv);
+    JS_HANDLE_VALUE argv[2] = {database, optionsObj};
+    instance = JS_NEW_INSTANCE(fnc, 2, argv);
   }
 
-  return NanEscapeScope(instance);
+  return JS_LEAVE_SCOPE(instance);
 }
 
-NAN_METHOD(Batch::Put) {
-  NanScope();
+JS_METHOD(Batch, Put) {
+  Batch* batch = ObjectWrap::Unwrap<Batch>(args.This());
+  JS_HANDLE_FUNCTION callback;  // purely for the error macros
 
-  Batch* batch = ObjectWrap::Unwrap<Batch>(args.Holder());
-  v8::Handle<v8::Function> callback; // purely for the error macros
+  if (args.Length() < 2) {
+    THROW_EXCEPTION("Batch::put expects two parameters");
+  }
 
-  v8::Local<v8::Value> keyBuffer = args[0];
-  v8::Local<v8::Value> valueBuffer = args[1];
+  JS_LOCAL_VALUE keyBuffer = GET_ARG(0);
+  JS_LOCAL_VALUE valueBuffer = GET_ARG(1);
   LD_STRING_OR_BUFFER_TO_SLICE(key, keyBuffer, key)
   LD_STRING_OR_BUFFER_TO_SLICE(value, valueBuffer, value)
 
   batch->batch->Put(key, value);
-  if (!batch->hasData)
-    batch->hasData = true;
+  if (!batch->hasData) batch->hasData = true;
 
   DisposeStringOrBufferFromSlice(keyBuffer, key);
   DisposeStringOrBufferFromSlice(valueBuffer, value);
 
-  NanReturnValue(args.Holder());
+  RETURN_PARAM(args.Holder());
 }
+JS_METHOD_END
 
-NAN_METHOD(Batch::Del) {
-  NanScope();
+JS_METHOD(Batch, Del) {
+  Batch* batch = ObjectWrap::Unwrap<Batch>(args.This());
 
-  Batch* batch = ObjectWrap::Unwrap<Batch>(args.Holder());
+  if (args.Length() == 0) {
+    THROW_EXCEPTION("Batch::Del expects a parameter");
+  }
 
-  v8::Handle<v8::Function> callback; // purely for the error macros
+  JS_HANDLE_FUNCTION callback;  // purely for the error macros
 
-  v8::Local<v8::Value> keyBuffer = args[0];
+  JS_LOCAL_VALUE keyBuffer = JS_TYPE_TO_LOCAL_VALUE(args.GetItem(0));
   LD_STRING_OR_BUFFER_TO_SLICE(key, keyBuffer, key)
 
   batch->batch->Delete(key);
-  if (!batch->hasData)
-    batch->hasData = true;
+  if (!batch->hasData) batch->hasData = true;
 
   DisposeStringOrBufferFromSlice(keyBuffer, key);
 
-  NanReturnValue(args.Holder());
+  RETURN_PARAM(args.Holder());
 }
+JS_METHOD_END
 
-NAN_METHOD(Batch::Clear) {
-  NanScope();
-
-  Batch* batch = ObjectWrap::Unwrap<Batch>(args.Holder());
+JS_METHOD(Batch, Clear) {
+  Batch* batch = ObjectWrap::Unwrap<Batch>(args.This());
 
   batch->batch->Clear();
   batch->hasData = false;
 
-  NanReturnValue(args.Holder());
+  RETURN_PARAM(args.Holder());
 }
+JS_METHOD_END
 
-NAN_METHOD(Batch::Write) {
-  NanScope();
+JS_METHOD(Batch, Write) {
+  Batch* batch = ObjectWrap::Unwrap<Batch>(args.This());
 
-  Batch* batch = ObjectWrap::Unwrap<Batch>(args.Holder());
+  if (!args.IsFunction(0)) {
+    THROW_EXCEPTION("Batch::Write expects a function");
+  }
 
+  JS_HANDLE_FUNCTION lfnc = args.GetAsFunction(0);
   if (batch->hasData) {
-    NanCallback *callback =
-        new NanCallback(v8::Local<v8::Function>::Cast(args[0]));
-    BatchWriteWorker* worker  = new BatchWriteWorker(batch, callback);
+    NanCallback* callback = new NanCallback(lfnc);
+    BatchWriteWorker* worker = new BatchWriteWorker(batch, callback);
     // persist to prevent accidental GC
-    v8::Local<v8::Object> _this = args.This();
+    JS_LOCAL_OBJECT _this = JS_TYPE_TO_LOCAL_OBJECT(args.This());
     worker->SaveToPersistent("batch", _this);
     NanAsyncQueueWorker(worker);
   } else {
-    LD_RUN_CALLBACK(v8::Local<v8::Function>::Cast(args[0]), 0, NULL);
+    LD_RUN_CALLBACK(lfnc, 0, NULL);
   }
-
-  NanReturnUndefined();
 }
+JS_METHOD_END
 
-} // namespace leveldown
+}  // namespace leveldown
