@@ -70,7 +70,7 @@
               , '-Wno-unused-but-set-variable'
             ]
         }]
-      , ['OS == "linux"', {
+      , ['OS in "android linux"', {
             'defines': [
                 'OS_LINUX=1'
             ]
