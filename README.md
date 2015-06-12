@@ -1,4 +1,4 @@
-LevelDOWN
+LevelDOWN (This version supports both JXcore v8 and SpiderMonkey)
 =========
 
 <img alt="LevelDB Logo" height="100" src="http://leveldb.org/img/logo.svg">
