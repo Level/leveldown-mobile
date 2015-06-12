@@ -15,13 +15,15 @@
                   }
               }
           }]
-        , ['OS == "linux"', {
-              'cflags': [
-              ]
-            , 'cflags!': [ '-fno-tree-vrp' ]
+        , ['OS in "linux android mac ios"', {
+            'cflags': ['-std=c++0x'],
+            'cflags!': [ '-fno-tree-vrp' ],
+            'xcode_settings': {
+              'OTHER_CPLUSPLUSFLAGS': ['-std=c++11', '-stdlib=libstdc++']
+            }
           }]
-        ]
-      , "dependencies": [
+        ],
+        "dependencies": [
             "<(module_root_dir)/deps/leveldb/leveldb.gyp:leveldb"
         ]
       , "include_dirs"  : [
