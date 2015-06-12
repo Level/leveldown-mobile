@@ -1,4 +1,4 @@
-### LevelDOWN (This version supports both JXcore v8 and SpiderMonkey)
+### LevelDOWN (This version requires JXcore v8 or SpiderMonkey)
 =========
 
 <img alt="LevelDB Logo" height="100" src="http://leveldb.org/img/logo.svg">
@@ -11,6 +11,14 @@ A Low-level Node.js LevelDB binding
 [![NPM](https://nodei.co/npm/leveldown.png?stars&downloads&downloadRank)](https://nodei.co/npm/leveldown/) [![NPM](https://nodei.co/npm-dl/leveldown.png?months=6&height=3)](https://nodei.co/npm/leveldown/)
 
 LevelDOWN was extracted from [LevelUP](https://github.com/level/levelup) and now serves as a stand-alone binding for LevelDB.
+
+##### Installation
+
+ - Clone this repo from Github
+ - Visit the 'leveldown' folder
+ - 'jx install'
+
+##### Remarks
 
 It is **strongly recommended** that you use LevelUP in preference to LevelDOWN unless you have measurable performance reasons to do so. LevelUP is optimised for usability and safety. Although we are working to improve the safety of the LevelDOWN interface it is still easy to crash your Node process if you don't do things in just the right way.
 
