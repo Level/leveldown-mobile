@@ -1,9 +1,17 @@
 const util              = require('util')
-    , AbstractLevelDOWN = require('abstract-leveldown').AbstractLevelDOWN
+    , AbstractLevelDOWN = require('abstract-leveldown').AbstractLevelDOWN;
 
-    , binding           = require('bindings')('leveldown.node').leveldown
+var binding;
 
-    , ChainedBatch      = require('./chained-batch')
+try {
+    binding = require('bindings')('leveldown.node').leveldown
+} catch(e) {
+  if (process.versions.embedded && process.versions.embedded.leveldown)
+    binding = require('_jx_loadEmbedded').load('leveldown');
+  else
+    throw e;  
+}
+    var ChainedBatch      = require('./chained-batch')
     , Iterator          = require('./iterator')
 
 
