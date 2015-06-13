@@ -72,7 +72,7 @@
         }]
       , ['OS in "android linux"', {
             'defines': [
-                'OS_LINUX=1'
+                'OS_LINUX=1', 'LEVELDB_PLATFORM_ANDROID', 'OS_ANDROID'
             ]
           , 'libraries': [
                 '-lpthread'
