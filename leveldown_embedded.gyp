@@ -70,6 +70,9 @@
 	              "JS_HAVE_ENDIAN_H",
 	            ],
 	          }],
+	          ['OS == "android"', {
+	            "defines": [ 'OS_ANDROID', 'LEVELDB_PLATFORM_ANDROID' ]
+	          }],
 	          ['OS in "freebsd bsd"', {
 	            "defines": [
 	              "JS_HAVE_MACHINE_ENDIAN_H",
