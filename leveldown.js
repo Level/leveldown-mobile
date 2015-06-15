@@ -3,16 +3,13 @@ const util              = require('util')
 
 var binding;
 
-try {
-    binding = require('bindings')('leveldown.node').leveldown
-} catch(e) {
-  if (process.versions.embedded && process.versions.embedded.leveldown)
-    binding = jxcore.embeddedModule.require('leveldown').leveldown;
-  else
-    throw e;  
-}
-    var ChainedBatch      = require('./chained-batch')
-    , Iterator          = require('./iterator')
+if (process.versions.embedded && process.versions.embedded.leveldown)
+	binding = jxcore.embeddedModule.require('leveldown').leveldown;
+else
+	binding = require('bindings')('leveldown.node').leveldown;
+    
+var ChainedBatch      = require('./chained-batch')
+    , Iterator        = require('./iterator')
 
 
 function LevelDOWN (location) {
