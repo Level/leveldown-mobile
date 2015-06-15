@@ -33,7 +33,7 @@ JS_METHOD_END
 
 JS_LOCAL_METHOD(RepairDB) {
   if (args.Length() < 2 || !args.IsString(0) || !args.IsFunction(1)) {
-    THROW_EXCEPTION("DestroyDB expects (string, function) parameters");
+    THROW_EXCEPTION("repair() requires `location` and `callback` arguments");
   }
 
   jxcore::JXString location;
@@ -50,21 +50,33 @@ JS_LOCAL_METHOD(RepairDB) {
 }
 JS_METHOD_END
 
+class LeveldownWrap
+{
+public:
+
+ static DEFINE_JS_METHOD(New);
+
+ INIT_NAMED_CLASS_MEMBERS(leveldown, LeveldownWrap) {
+   Database::Initialize(target);
+   leveldown::Iterator::Initialize(target);
+   leveldown::Batch::Initialize(target);
+
+   SET_CLASS_METHOD("repair", RepairDB, 0);
+   SET_CLASS_METHOD("destroy", DestroyDB, 0);
+ }
+ END_INIT_NAMED_MEMBERS(leveldown)
+};
+
+JS_METHOD(LeveldownWrap, New) {
+  JS_LOCAL_STRING location = JS_TYPE_TO_LOCAL_STRING(args.GetAsString(0));
+  RETURN_PARAM(Database::NewInstance(location));
+}
+JS_METHOD_END
+
 void RegisterModule(JS_HANDLE_OBJECT_REF target) {
-  JS_ENTER_SCOPE_COM();
-  JS_DEFINE_STATE_MARKER(com);
+  JS_ENTER_SCOPE();
 
-  Database::Initialize(target);
-  leveldown::Iterator::Initialize(target);
-  leveldown::Batch::Initialize(target);
-
-  JS_LOCAL_FUNCTION leveldown =
-      JS_GET_FUNCTION(JS_NEW_FUNCTION_CALL_TEMPLATE(LevelDOWN));
-
-  JS_METHOD_SET(leveldown, "destroy", DestroyDB);
-  JS_METHOD_SET(leveldown, "repair", RepairDB);
-
-  JS_METHOD_SET(target, "leveldown", LevelDOWN);
+  LeveldownWrap::Initialize(target);
 }
 
 }  // namespace leveldown

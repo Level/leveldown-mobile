@@ -113,12 +113,6 @@ void Database::CloseDatabase() {
 
 /* V8 exposed functions *****************************/
 
-JS_LOCAL_METHOD(LevelDOWN) {
-  JS_LOCAL_STRING location = JS_TYPE_TO_LOCAL_STRING(args.GetAsString(0));
-  RETURN_PARAM(Database::NewInstance(location));
-}
-JS_METHOD_END
-
 JS_METHOD(Database, New) {
   JS_CLASS_NEW_INSTANCE(obj, Database);
   JS_LOCAL_OBJECT arg0 = JS_VALUE_TO_OBJECT(args.GetItem(0));
