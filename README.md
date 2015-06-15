@@ -14,13 +14,15 @@ LevelDOWN was extracted from [LevelUP](https://github.com/level/levelup) and now
 
 ##### Installation
 
- - Clone this repo from Github
- - Visit the 'leveldown' folder
- - 'jx install'
+ - Download [leveldown.jx file](https://github.com/thaliproject/leveldown/raw/master/leveldown.jx)
+ - Locate it under your project folder
+ - 'var leveldown = require('./leveldown.jx');'
 
 ##### Remarks
 
-It is **strongly recommended** that you use LevelUP in preference to LevelDOWN unless you have measurable performance reasons to do so. LevelUP is optimised for usability and safety. Although we are working to improve the safety of the LevelDOWN interface it is still easy to crash your Node process if you don't do things in just the right way.
+- This version of Leveldown only works with JXcore and platform independent. 
+
+- It is **strongly recommended** that you use LevelUP in preference to LevelDOWN unless you have measurable performance reasons to do so. LevelUP is optimised for usability and safety. Although we are working to improve the safety of the LevelDOWN interface it is still easy to crash your Node process if you don't do things in just the right way.
 
 See the section on <a href="#safety">safety</a> below for details of known unsafe operations with LevelDOWN.
 
