@@ -386,7 +386,7 @@ JS_METHOD(Iterator, New) {
   OPTIONS_TO_BOOLEAN(values, true);
   OPTIONS_TO_BOOLEAN(keyAsBuffer, true);
   OPTIONS_TO_BOOLEAN(valueAsBuffer, true);
-  OPTIONS_TO_BOOLEAN(fillCache, true);
+  OPTIONS_TO_BOOLEAN(fillCache, false);
 
   JS_CLASS_NEW_INSTANCE(obj, Iterator);
 
