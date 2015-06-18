@@ -144,7 +144,7 @@ JS_HANDLE_VALUE Database::NewInstance(JS_LOCAL_STRING& location) {
 JS_METHOD(Database, Open) {
   LD_METHOD_SETUP_COMMON(open, 0, 1)
 
-  JS_LOCAL_VALUE obj = JS_GET_NAME(optionsObj, JS_STRING_ID("createIfMissing"));
+  JS_LOCAL_VALUE obj;
 
   bool createIfMissing = true;
   if (JS_HAS_NAME(optionsObj, JS_STRING_ID("createIfMissing"))) {
@@ -245,12 +245,11 @@ JS_METHOD(Database, Close) {
           JS_LOCAL_FUNCTION end = JS_TYPE_AS_FUNCTION(obj_end);
           JS_LOCAL_FUNCTION_TEMPLATE tmp = JS_NEW_EMPTY_FUNCTION_TEMPLATE();
 
-          JS_LOCAL_VALUE argv[] = {
-              JS_GET_FUNCTION(tmp)
-          };
+          JS_LOCAL_VALUE argv[] = {JS_GET_FUNCTION(tmp)};
           NanMakeCallback(obj, end, 1, argv);
         } else {
-          THROW_EXCEPTION("database instance doesn't have end function defined");
+          THROW_EXCEPTION(
+              "database instance doesn't have end function defined");
         }
       }
     }
@@ -293,8 +292,7 @@ JS_METHOD(Database, Get) {
 
   bool asBuffer = true;
   if (JS_HAS_NAME(optionsObj, JS_STRING_ID("asBuffer"))) {
-    JS_LOCAL_VALUE obj_sync =
-        JS_GET_NAME(optionsObj, JS_STRING_ID("asBuffer"));
+    JS_LOCAL_VALUE obj_sync = JS_GET_NAME(optionsObj, JS_STRING_ID("asBuffer"));
     asBuffer = BOOLEAN_TO_STD(obj_sync);
   }
 
