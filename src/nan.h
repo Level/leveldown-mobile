@@ -1,3 +1,4 @@
+// WARNING! THIS IS NOT THE WHOLE NAN FILE. IT'S EDITED FOR JX-NI
 /*********************************************************************
  * NAN - Native Abstractions for Node.js
  *

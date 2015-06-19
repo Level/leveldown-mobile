@@ -4,7 +4,7 @@
 	"author": "see github.com/Level",
 	"description": "iOS and Android ready Leveldown",
 	"company": "Level",
-	"website": "github.com/thaliproject/leveldown",
+	"website": "github.com/Level/leveldown",
 	"package": null,
 	"startup": "leveldown.js",
 	"execute": null,

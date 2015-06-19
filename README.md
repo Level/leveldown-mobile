@@ -1,22 +1,17 @@
-### LevelDOWN (This version requires JXcore v8 or SpiderMonkey)
+### LevelDOWN for Mobile  
 =========
+
+- Leveldown for Android, iOS. Also works on Destkop with SpiderMonkey / v8 engine
+- Requires [JXcore](https://github.com/jxcore/jxcore) to run.
 
 <img alt="LevelDB Logo" height="100" src="http://leveldb.org/img/logo.svg">
 
 A Low-level Node.js LevelDB binding
 -------------------------
 
-[![Build Status](https://secure.travis-ci.org/Level/leveldown.png)](http://travis-ci.org/Level/leveldown)
-
-[![NPM](https://nodei.co/npm/leveldown.png?stars&downloads&downloadRank)](https://nodei.co/npm/leveldown/) [![NPM](https://nodei.co/npm-dl/leveldown.png?months=6&height=3)](https://nodei.co/npm/leveldown/)
+[![Build Status](https://secure.travis-ci.org/Level/leveldown.png)](http://travis-ci.org/Level/leveldown-mobile)
 
 LevelDOWN was extracted from [LevelUP](https://github.com/level/levelup) and now serves as a stand-alone binding for LevelDB.
-
-##### Installation
-
- - Download [leveldown.jx file](https://github.com/thaliproject/leveldown/raw/master/leveldown.jx)
- - Locate it under your project folder
- - 'var leveldown = require('./leveldown.jx');'
 
 ##### Remarks
 
@@ -29,14 +24,13 @@ See the section on <a href="#safety">safety</a> below for details of known unsaf
 <a name="platforms"></a>
 Tested & supported platforms
 ----------------------------
-
-  * **Linux** (including ARM platforms such as Raspberry Pi *and Kindle!*)
+  * **Android**
+  * **iOS**
+  * **Linux** 
   * **Mac OS**
-  * **Solaris** (SmartOS & Nodejitsu)
+  * **Solaris** 
   * **FreeBSD**
   * **Windows**
-    * Node 0.10 and above only, see [issue #5](https://github.com/level/levelup/issues/5) for more info
-    * See installation instructions for *node-gyp* dependencies [here](https://github.com/TooTallNate/node-gyp#installation), you'll need these (free) components from Microsoft to compile and run any native Node add-on in Windows.
 
 <a name="api"></a>
 ## API
@@ -299,7 +293,7 @@ LevelDOWN is an **OPEN Open Source Project**. This means that:
 
 > Individuals making significant and valuable contributions are given commit-access to the project to contribute as they see fit. This project is more like an open wiki than a standard guarded open source project.
 
-See the [CONTRIBUTING.md](https://github.com/level/leveldown/blob/master/CONTRIBUTING.md) file for more details.
+See the [CONTRIBUTING.md](https://github.com/level/leveldown-mobile/blob/master/CONTRIBUTING.md) file for more details.
 
 ### Contributors
 
@@ -319,6 +313,7 @@ LevelDOWN is only possible due to the excellent work of the following contributo
 <tr><th align="left">Matteo Collina</th><td><a href="https://github.com/mcollina">GitHub/mcollina</a></td><td><a href="https://twitter.com/matteocollina">Twitter/@matteocollina</a></td></tr>
 <tr><th align="left">Pedro Teixeira</th><td><a href="https://github.com/pgte">GitHub/pgte</a></td><td><a href="https://twitter.com/pgte">Twitter/@pgte</a></td></tr>
 <tr><th align="left">James Halliday</th><td><a href="https://github.com/substack">GitHub/substack</a></td><td><a href="https://twitter.com/substack">Twitter/@substack</a></td></tr>
+<tr><th align="left">Oguz Bastemur</th><td><a href="https://github.com/obastemur">GitHub/obastemur</a></td><td><a href="https://twitter.com/obastemur">Twitter/@obastemur</a></td></tr>
 </tbody></table>
 
 ### Windows

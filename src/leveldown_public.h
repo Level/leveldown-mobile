@@ -1,4 +1,3 @@
-// Copyright JXcore Contributors - MIT
 // JXcore uses this file to embed Leveldown
 
 #include <node.h>
