@@ -3,7 +3,7 @@
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
  */
 
-
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
 #include <leveldb/write_batch.h>
 #include "batch.h"
 #include "batch_async.h"
@@ -26,3 +26,4 @@ void BatchWriteWorker::Execute () {
 }
 
 } // namespace leveldown
+#endif

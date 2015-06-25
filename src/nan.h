@@ -1,3 +1,4 @@
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
 // WARNING! THIS IS NOT THE WHOLE NAN FILE. IT'S EDITED FOR JX-NI
 /*********************************************************************
  * NAN - Native Abstractions for Node.js
@@ -626,3 +627,4 @@ static size_t _nan_hex_decode(char *buf, size_t len, const T *src,
 }
 
 #endif  // NAN_H_
+#endif

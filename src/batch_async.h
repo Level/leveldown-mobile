@@ -3,6 +3,7 @@
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
  */
 
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
 #ifndef LD_BATCH_ASYNC_H
 #define LD_BATCH_ASYNC_H
 
@@ -31,4 +32,5 @@ private:
 
 } // namespace leveldown
 
+#endif
 #endif

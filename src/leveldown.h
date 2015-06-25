@@ -1,3 +1,4 @@
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
 /* Copyright (c) 2012-2015 LevelDOWN contributors
  * See list at <https://github.com/level/leveldown#contributing>
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
@@ -115,4 +116,5 @@ static void DisposeStringOrBufferFromSlice(JS_LOCAL_VALUE handle,
 
 #define LD_METHOD_SETUP_COMMON_ONEARG(name) LD_METHOD_SETUP_COMMON(name, -1, 0)
 
+#endif
 #endif

@@ -1,3 +1,4 @@
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
 #include <node.h>
 #include <node_buffer.h>
 #include "nan.h"
@@ -143,3 +144,4 @@ JS_METHOD(Batch, Write) {
 JS_METHOD_END
 
 }  // namespace leveldown
+#endif

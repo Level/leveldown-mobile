@@ -1,3 +1,4 @@
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
 #ifndef LD_BATCH_H
 #define LD_BATCH_H
 
@@ -49,4 +50,5 @@ class Batch : public node::ObjectWrap {
 
 }  // namespace leveldown
 
+#endif
 #endif
