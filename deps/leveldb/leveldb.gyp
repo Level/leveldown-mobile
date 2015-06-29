@@ -4,7 +4,7 @@
         'ldbversion': '1.17.0'
     }
   , 'type': 'static_library'
-		# Overcomes an issue with the linker and thin .a files on SmartOS
+    # Overcomes an issue with the linker and thin .a files on SmartOS
   , 'standalone_static_library': 1
   , 'dependencies': [
         '../snappy/snappy.gyp:snappy'
@@ -72,7 +72,7 @@
         }]
       , ['OS in "android linux"', {
             'defines': [
-                'OS_LINUX=1', 'LEVELDB_PLATFORM_ANDROID', 'OS_ANDROID'
+                'OS_LINUX=1'
             ]
           , 'libraries': [
                 '-lpthread'
@@ -80,6 +80,11 @@
           , 'ccflags': [
                 '-pthread'
             ]
+        }],
+        ['OS == "android"', {
+          'defines': [
+            'OS_ANDROID', 'LEVELDB_PLATFORM_ANDROID',
+          ]
         }]
       , ['OS == "freebsd"', {
             'defines': [
