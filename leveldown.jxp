@@ -1,10 +1,10 @@
 {
 	"name": "leveldown",
-	"version": "1.0.6",
+	"version": "1.0.8",
 	"author": "see github.com/Level",
-	"description": "iOS and Android ready Leveldown",
+	"description": "Leveldown for Android and iOS",
 	"company": "Level",
-	"website": "github.com/Level/leveldown",
+	"website": "github.com/Level/leveldown-mobile",
 	"package": null,
 	"startup": "leveldown.js",
 	"execute": null,

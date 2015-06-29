@@ -1,6 +1,11 @@
 Note that we have filtered out commits related to new tags, updating changelog and we're also not listing any merge commits, i.e. we are only listing things that changed between versions.
+### 1.0.7/1.0.8 June 29 2015
 
-### 1.0.6m (June 20 2015)
+* fix Linux compile issue
+* fix npm install
+* fix Windows compile issue
+
+### 1.0.6m June 20 2015
 
 * Updated for Android and iOS (mostly mechanical changes)
 
