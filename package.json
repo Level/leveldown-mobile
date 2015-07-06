@@ -1,7 +1,7 @@
 {
   "name": "leveldown-mobile",
   "description": "A Node.js LevelDB binding for Android and iOS, primary backend for LevelUP",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "contributors": [
     "Rod Vagg <r@va.gg> (https://github.com/rvagg)",
     "John Chesley <john@chesl.es> (https://github.com/chesles/)",

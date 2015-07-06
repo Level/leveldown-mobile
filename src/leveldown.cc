@@ -80,5 +80,9 @@ void RegisterModule(JS_HANDLE_OBJECT_REF target) {
   LeveldownWrap::Initialize(target);
 }
 
+#ifndef JXCORE_EMBEDS_LEVELDOWN
+NODE_MODULE(leveldown, RegisterModule);
+#endif
+
 }  // namespace leveldown
 #endif

@@ -6,6 +6,20 @@
 
 <img alt="LevelDB Logo" height="100" src="http://leveldb.org/img/logo.svg">
 
+##### Installation
+
+- To use with a mobile node application (i.e. JXcore)
+
+```
+npm install leveldown-mobile
+```
+
+- To compile for SpiderMonkey desktop or OpenWrt embedded
+
+```
+jx install leveldown-mobile  
+```
+
 A Low-level Node.js LevelDB binding
 -------------------------
 

@@ -3,10 +3,13 @@ const util              = require('util')
 
 var binding;
 
-if (process.versions.embedded && process.versions.embedded.leveldown)
+if (process.versions.embedded && process.versions.embedded.leveldown) {
   binding = jxcore.embeddedModule.require('leveldown').leveldown;
-else
-  binding = require('bindings')('leveldown.node').leveldown;
+} else {
+  var path = require('path');
+  var build_path = path.join(__dirname, 'build/Release/leveldown.node');
+  binding = require(build_path).leveldown;
+}
     
 var ChainedBatch      = require('./chained-batch')
     , Iterator        = require('./iterator')

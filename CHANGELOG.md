@@ -1,4 +1,9 @@
 Note that we have filtered out commits related to new tags, updating changelog and we're also not listing any merge commits, i.e. we are only listing things that changed between versions.
+### 1.0.10 July 06 2015
+
+* leveldown-mobile native extension works also on desktop
+* provide fast discovery path for devices with slow IO
+
 ### 1.0.7/1.0.9 June 29 2015
 
 * npmignore leveldown_embedded.gyp
