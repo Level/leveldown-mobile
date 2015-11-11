@@ -1,4 +1,5 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 /* Copyright (c) 2012-2015 LevelDOWN contributors
  * See list at <https://github.com/level/leveldown#contributing>
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
@@ -353,8 +354,7 @@ JS_METHOD(Database, Batch) {
     sync = BOOLEAN_TO_STD(obj_sync);
   }
 
-  JS_LOCAL_OBJECT arg0 = JS_VALUE_TO_OBJECT(args.GetItem(0));
-  JS_LOCAL_ARRAY array = JS_TYPE_TO_LOCAL_ARRAY(arg0);
+  JS_HANDLE_ARRAY array = JS_TYPE_AS_ARRAY(args.GetItem(0));
 
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   bool hasData = false;

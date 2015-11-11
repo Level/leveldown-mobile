@@ -25,10 +25,22 @@
       , 'leveldb-<(ldbversion)/include/'
     ]
   , 'conditions': [
+        ['node_win_onecore==1', {
+          'defines': [ 'WINONECORE=1',
+                       '_WIN32_WINNT=0x0603', ]
+        }],
         ['OS == "win"', {
+		    'conditions': [
+			  ['MSVS_VERSION != "2015" and MSVS_VERSION != "2013"', {
+			    'include_dirs': [
+                  'leveldb-<(ldbversion)/port/win'
+                ]
+			  }]
+			],
             'include_dirs': [
-                'leveldb-<(ldbversion)/port/win'
-              , 'port-libuv/'
+              'port-libuv/',
+			  '../../../uv/include/',
+			  '../../../uv/src/'
             ]
           , 'defines': [
                 'LEVELDB_PLATFORM_UV=1'

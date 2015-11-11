@@ -1,4 +1,5 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 #include <node.h>
 #include <node_buffer.h>
 #include "nan.h"
@@ -50,6 +51,7 @@ JS_METHOD_END
 JS_HANDLE_VALUE Batch::NewInstance(JS_HANDLE_OBJECT_REF database,
                                    JS_HANDLE_OBJECT_REF optionsObj) {
   JS_ENTER_SCOPE_COM();
+  JS_DEFINE_STATE_MARKER(com);
 
   JS_LOCAL_OBJECT instance;
   JS_LOCAL_FUNCTION_TEMPLATE constructorHandle =

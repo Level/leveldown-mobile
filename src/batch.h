@@ -1,4 +1,5 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 #ifndef LD_BATCH_H
 #define LD_BATCH_H
 
@@ -18,8 +19,8 @@ class Batch : public node::ObjectWrap {
 
   INIT_NAMED_CLASS_MEMBERS(Batch, Batch) {
     int id = com->threadId;
-    jx_persistent.templates[id] =
-        JS_NEW_PERSISTENT_FUNCTION_TEMPLATE(constructor);
+    JS_NEW_PERSISTENT_FUNCTION_TEMPLATE(jx_persistent.templates[id],
+                                        constructor);
 
     SET_INSTANCE_METHOD("put", Batch::Put, 0);
     SET_INSTANCE_METHOD("del", Batch::Del, 0);

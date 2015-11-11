@@ -1,5 +1,7 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
-// WARNING! THIS IS NOT THE WHOLE NAN FILE. IT'S EDITED FOR JX-NI
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
+// WARNING! THIS IS NOT THE ORIGINAL NAN FILE. IT'S EDITED FOR JX-NI
+// VISIT https://github.com/nodejs/nan for NAN
 /*********************************************************************
  * NAN - Native Abstractions for Node.js
  *
@@ -183,40 +185,21 @@ inline void nauv_key_set(nauv_key_t *key, void *value) {
 #endif
 #endif
 
-#define OPTIONS_TO_BOOLEAN(name, default_value)                          \
-  bool name = default_value;                                             \
-  if (JS_HAS_NAME(optionsObj, JS_STRING_ID(#name))) {                    \
+#define OPTIONS_TO_BOOLEAN(name, default_value)                         \
+  bool name = default_value;                                            \
+  if (JS_HAS_NAME(optionsObj, JS_STRING_ID(#name))) {                   \
     JS_LOCAL_VALUE obj_ = JS_GET_NAME(optionsObj, JS_STRING_ID(#name)); \
-    name = BOOLEAN_TO_STD(obj_);                                         \
+    name = BOOLEAN_TO_STD(obj_);                                        \
   }
 
 NAN_INLINE
 JS_LOCAL_OBJECT NanObjectWrapHandle(const node::ObjectWrap *obj) {
-  return JS_TYPE_TO_LOCAL_OBJECT(const_cast<node::ObjectWrap *>(obj)->handle_);
+  return JS_OBJECT_FROM_PERSISTENT(const_cast<node::ObjectWrap *>(obj)->handle_);
 }
 
-NAN_INLINE bool NanHasInstance(
-    JS_PERSISTENT_FUNCTION_TEMPLATE &function_template, JS_HANDLE_VALUE value) {
-  return function_template->HasInstance(value);
-}
+#define NanHasInstance(a,b) JS_HAS_INSTANCE(a,b)
 
-NAN_INLINE JS_LOCAL_VALUE NanMakeCallback(JS_HANDLE_OBJECT target,
-                                          JS_HANDLE_FUNCTION func, int argc,
-                                          JS_HANDLE_VALUE *argv) {
-  return JS_TYPE_TO_LOCAL_VALUE(node::MakeCallback(target, func, argc, argv));
-}
-
-NAN_INLINE JS_LOCAL_VALUE NanMakeCallback(JS_HANDLE_OBJECT target,
-                                          JS_HANDLE_STRING symbol, int argc,
-                                          JS_HANDLE_VALUE *argv) {
-  return JS_TYPE_TO_LOCAL_VALUE(node::MakeCallback(target, symbol, argc, argv));
-}
-
-NAN_INLINE JS_LOCAL_VALUE NanMakeCallback(JS_HANDLE_OBJECT target,
-                                          const char *method, int argc,
-                                          JS_HANDLE_VALUE *argv) {
-  return JS_TYPE_TO_LOCAL_VALUE(node::MakeCallback(target, method, argc, argv));
-}
+#define NanMakeCallback(a,b,c,d) node::MakeCallback(a, b, c, d)
 
 NAN_INLINE void NanFatalException(const ENGINE_NS::TryCatch &try_catch) {
   node::FatalException(const_cast<ENGINE_NS::TryCatch &>(try_catch));
@@ -233,7 +216,7 @@ class NanCallback {
     com_ = com;
 
     JS_LOCAL_OBJECT obj = JS_NEW_EMPTY_OBJECT();
-    handle = JS_NEW_PERSISTENT_OBJECT(obj);
+    JS_NEW_PERSISTENT_OBJECT(handle, obj);
   }
 
   explicit NanCallback(JS_HANDLE_FUNCTION &fn) {
@@ -242,7 +225,7 @@ class NanCallback {
     com_ = com;
 
     JS_LOCAL_OBJECT obj = JS_NEW_EMPTY_OBJECT();
-    handle = JS_NEW_PERSISTENT_OBJECT(obj);
+    JS_NEW_PERSISTENT_OBJECT(handle, obj);
     SetFunction(fn);
   }
 
@@ -252,7 +235,8 @@ class NanCallback {
   }
 
   bool operator==(const NanCallback &other) const {
-    JS_ENTER_SCOPE();
+    JS_ENTER_SCOPE_WITH(com_->node_isolate);
+    JS_DEFINE_STATE_MARKER(com_);
     JS_LOCAL_OBJECT obj = JS_TYPE_TO_LOCAL_OBJECT(handle);
     JS_LOCAL_VALUE a = JS_GET_INDEX(obj, kCallbackIndex);
     JS_LOCAL_OBJECT other_obj = JS_TYPE_TO_LOCAL_OBJECT(other.handle);
@@ -267,22 +251,22 @@ class NanCallback {
   NAN_INLINE void SetFunction(JS_HANDLE_FUNCTION &fn) {
     JS_ENTER_SCOPE();
     JS_DEFINE_STATE_MARKER(com_);
-    JS_LOCAL_OBJECT obj = JS_TYPE_TO_LOCAL_OBJECT(handle);
+    JS_LOCAL_OBJECT obj = JS_OBJECT_FROM_PERSISTENT(handle);
     JS_INDEX_SET(obj, kCallbackIndex, fn);
   }
 
   NAN_INLINE JS_LOCAL_FUNCTION GetFunction() {
     JS_ENTER_SCOPE();
     JS_DEFINE_STATE_MARKER(com_);
-    JS_LOCAL_OBJECT obj = JS_TYPE_TO_LOCAL_OBJECT(handle);
+    JS_LOCAL_OBJECT obj = JS_OBJECT_FROM_PERSISTENT(handle);
     JS_LOCAL_VALUE val = JS_GET_INDEX(obj, kCallbackIndex);
     return JS_LEAVE_SCOPE(JS_CAST_FUNCTION(val));
   }
 
-  NAN_INLINE bool IsEmpty() const {
+  NAN_INLINE bool IsEmpty() {
     JS_ENTER_SCOPE();
     JS_DEFINE_STATE_MARKER(com_);
-    JS_LOCAL_OBJECT obj = JS_TYPE_TO_LOCAL_OBJECT(handle);
+    JS_LOCAL_OBJECT obj = JS_OBJECT_FROM_PERSISTENT(handle);
     JS_LOCAL_VALUE val = JS_GET_INDEX(obj, kCallbackIndex);
     return JS_IS_UNDEFINED(val);
   }
@@ -307,9 +291,12 @@ class NanCallback {
     JS_ENTER_SCOPE();
     JS_DEFINE_STATE_MARKER(com_);
 
-    JS_LOCAL_VALUE val = JS_GET_INDEX(handle, kCallbackIndex);
+    JS_LOCAL_OBJECT hobj = JS_OBJECT_FROM_PERSISTENT(handle);
+    JS_LOCAL_VALUE val = JS_GET_INDEX(hobj, kCallbackIndex);
     JS_LOCAL_FUNCTION callback = JS_TYPE_AS_FUNCTION(val);
-    return JS_LEAVE_SCOPE(node::MakeCallback(target, callback, argc, argv));
+    JS_LOCAL_OBJECT ret_val =
+        JS_VALUE_TO_OBJECT(node::MakeCallback(target, callback, argc, argv));
+    return JS_LEAVE_SCOPE(ret_val);
   }
 };
 
@@ -324,7 +311,7 @@ class NanCallback {
     JS_DEFINE_STATE_MARKER(com);
     com_ = com;
     JS_LOCAL_OBJECT obj = JS_NEW_EMPTY_OBJECT();
-    persistentHandle = JS_NEW_PERSISTENT_OBJECT(obj);
+    JS_NEW_PERSISTENT_OBJECT(persistentHandle, obj);
   }
 
   virtual ~NanAsyncWorker() {

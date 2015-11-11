@@ -1,4 +1,9 @@
 Note that we have filtered out commits related to new tags, updating changelog and we're also not listing any merge commits, i.e. we are only listing things that changed between versions.
+### 1.1.0 November 12 2015
+
+* Windows UWP support
+* Chakra engine option
+* Macro performance updates
 ### 1.0.10 July 06 2015
 
 * leveldown-mobile native extension works also on desktop

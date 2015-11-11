@@ -1,4 +1,5 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 /* Copyright (c) 2012-2015 LevelDOWN contributors
  * See list at <https://github.com/level/leveldown#contributing>
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
@@ -51,21 +52,19 @@ JS_LOCAL_METHOD(RepairDB) {
 }
 JS_METHOD_END
 
-class LeveldownWrap
-{
-public:
+class LeveldownWrap {
+ public:
+  static DEFINE_JS_METHOD(New);
 
- static DEFINE_JS_METHOD(New);
+  INIT_NAMED_CLASS_MEMBERS(leveldown, LeveldownWrap) {
+    Database::Initialize(target);
+    leveldown::Iterator::Initialize(target);
+    leveldown::Batch::Initialize(target);
 
- INIT_NAMED_CLASS_MEMBERS(leveldown, LeveldownWrap) {
-   Database::Initialize(target);
-   leveldown::Iterator::Initialize(target);
-   leveldown::Batch::Initialize(target);
-
-   SET_CLASS_METHOD("repair", RepairDB, 0);
-   SET_CLASS_METHOD("destroy", DestroyDB, 0);
- }
- END_INIT_NAMED_MEMBERS(leveldown)
+    SET_CLASS_METHOD("repair", RepairDB, 0);
+    SET_CLASS_METHOD("destroy", DestroyDB, 0);
+  }
+  END_INIT_NAMED_MEMBERS(leveldown)
 };
 
 JS_METHOD(LeveldownWrap, New) {
