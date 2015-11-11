@@ -1,4 +1,5 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 /* Copyright (c) 2012-2015 LevelDOWN contributors
  * See list at <https://github.com/level/leveldown#contributing>
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
@@ -106,7 +107,7 @@ void ReadWorker::HandleOKCallback() {
 
   JS_LOCAL_VALUE returnValue;
   if (asBuffer) {
-    returnValue = JS_TYPE_TO_LOCAL_VALUE(
+    returnValue = JS_OBJECT_FROM_PERSISTENT(
         node::Buffer::New((char *)value.data(), value.size(), com)->handle_);
   } else {
     returnValue =

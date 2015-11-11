@@ -1,4 +1,5 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 /* Copyright (c) 2012-2015 LevelDOWN contributors
  * See list at <https://github.com/level/leveldown#contributing>
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
@@ -14,18 +15,15 @@
 namespace leveldown {
 
 class NextWorker : public AsyncWorker {
-public:
-  NextWorker (
-      Iterator* iterator
-    , NanCallback *callback
-    , void (*localCallback)(Iterator*)
-  );
+ public:
+  NextWorker(Iterator* iterator, NanCallback* callback,
+             void (*localCallback)(Iterator*));
 
-  virtual ~NextWorker ();
-  virtual void Execute ();
-  virtual void HandleOKCallback ();
+  virtual ~NextWorker();
+  virtual void Execute();
+  virtual void HandleOKCallback();
 
-private:
+ private:
   Iterator* iterator;
   void (*localCallback)(Iterator*);
   std::vector<std::pair<std::string, std::string> > result;
@@ -33,21 +31,18 @@ private:
 };
 
 class EndWorker : public AsyncWorker {
-public:
-  EndWorker (
-      Iterator* iterator
-    , NanCallback *callback
-  );
+ public:
+  EndWorker(Iterator* iterator, NanCallback* callback);
 
-  virtual ~EndWorker ();
-  virtual void Execute ();
-  virtual void HandleOKCallback ();
+  virtual ~EndWorker();
+  virtual void Execute();
+  virtual void HandleOKCallback();
 
-private:
+ private:
   Iterator* iterator;
 };
 
-} // namespace leveldown
+}  // namespace leveldown
 
 #endif
 #endif

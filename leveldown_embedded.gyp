@@ -18,83 +18,105 @@
                     , "DisableSpecificWarnings": [ "4355", "4530" ,"4267", "4244", "4506" ]
                   }
               }
-          }]
-        , ['OS in "linux android mac ios"', {
+          }], 
+          ['OS in "linux android mac ios"', {
             'cflags!': [ '-fno-tree-vrp' ],
           }],
-          ['node_engine_mozilla!=1',
-        {
-          'defines': [
-            'JS_ENGINE_V8=1',
-          ],
-          'include_dirs': [
-          '../v8/include'
-        ],
-        },
-        {
-          'v8_use_snapshot%': 'false',
-          'defines': [
-            'JS_ENGINE_MOZJS=1'
-          ],
-          'include_dirs': [
-          '../mozjs/src'
-        ],
-          'conditions': [
-            ['OS!="win"', {
-              'defines': ['JS_POSIX_NSPR=1']
-            }],
-            ['target_arch in "arm armv7 armv7s"', {
-              'defines': ['WTF_CPU_ARM_TRADITIONAL', 'JS_NUNBOX32', 'JS_CPU_ARM=1'],
-            }],
-            ['target_arch=="arm64"', {
-              'defines': ['WTF_CPU_ARM_TRADITIONAL', 'JS_PUNBOX64', 'JS_CPU_ARM=1', '__ARM_ARCH_64__'],
-            }],
-            ['target_arch=="x64"', {
-              'defines': ['JS_PUNBOX64', 'JS_CPU_X64=1'],
-            }],
-            ['target_arch=="ia32"', {
-              'defines': ['JS_NUNBOX32', 'JS_CPU_X86=1'],
-            }],
-            ['target_arch in "mipsel mips"', {
-              'defines' : [ 'JS_CODEGEN_NONE', 'JS_NUNBOX32', 'JS_CPU_MIPS' ]
-            }],
-            ['OS in "linux android freebsd"', {
-              "cflags": [
-                "-std=c++0x", '-D__STDC_LIMIT_MACROS',
-                '-Wno-missing-field-initializers', '-Wno-extra',
-                '-Wno-invalid-offsetof', '-Wno-ignored-qualifiers'
+          [ 'node_engine_mozilla!=1', {
+            'defines': [
+              'JS_ENGINE_V8=1'
+            ],
+            'conditions' : [
+             [ 'v8_is_3_28==1', {
+               'defines': [
+                 'V8_IS_3_28=1'
+               ],
+             }, {
+              'defines': [ 
+                'V8_IS_3_14=1',
+              ],
+              'include_dirs': [
+                '../v8/include'
               ],
             }],
-            ['OS in "linux android"', {
-              "defines": [
-                "JS_HAVE_ENDIAN_H",
+            [ 'node_engine_chakra==1', {
+              'defines': [ 'JS_ENGINE_CHAKRA=1' ],
+              'include_dirs': [
+                '../chakrashim/include'
+              ]
+            }],
+            [ 'v8_is_3_28==1 and node_engine_chakra==0', {
+              'include_dirs': [
+                '../v8_3_28/v8/include',
+                '../v8_3_28/debugger-agent/include'
               ],
             }],
-            ['OS == "android"', {
-              "defines": [ 'OS_ANDROID', 'LEVELDB_PLATFORM_ANDROID' ]
-            }],
-            ['OS in "freebsd bsd"', {
-              "defines": [
-                "JS_HAVE_MACHINE_ENDIAN_H",
-              ],
-            }],
-            ['OS=="ios" or OS=="mac"',
-            {
-              'defines': [
-                'JS_HAVE_MACHINE_ENDIAN_H=1',
-                'XP_MACOSX=1',
-                'DARWIN=1',
-              ],
-              'xcode_settings': {
-                'OTHER_CPLUSPLUSFLAGS': ['-std=c++11', '-stdlib=libstdc++',
-                  '-Wno-mismatched-tags', '-Wno-missing-field-initializers',
-                  '-Wno-unused-private-field', '-Wno-invalid-offsetof', '-Wno-ignored-qualifiers'
+            ]
+          },
+          {
+            'v8_use_snapshot%': 'false',
+            'defines': [
+              'JS_ENGINE_MOZJS=1'
+            ],
+            'include_dirs': [
+              '../mozjs/src'
+            ],
+            'conditions': [
+              ['OS!="win"', {
+                'defines': ['JS_POSIX_NSPR=1']
+              }],
+              ['target_arch in "arm armv7 armv7s"', {
+                'defines': ['WTF_CPU_ARM_TRADITIONAL', 'JS_NUNBOX32', 'JS_CPU_ARM=1'],
+              }],
+              ['target_arch=="arm64"', {
+                'defines': ['WTF_CPU_ARM_TRADITIONAL', 'JS_PUNBOX64', 'JS_CPU_ARM=1', '__ARM_ARCH_64__'],
+              }],
+              ['target_arch=="x64"', {
+                'defines': ['JS_PUNBOX64', 'JS_CPU_X64=1'],
+              }],
+              ['target_arch=="ia32"', {
+                'defines': ['JS_NUNBOX32', 'JS_CPU_X86=1'],
+              }],
+              ['target_arch in "mipsel mips"', {
+                'defines' : [ 'JS_CODEGEN_NONE', 'JS_NUNBOX32', 'JS_CPU_MIPS' ]
+              }],
+              ['OS in "linux android freebsd"', {
+                "cflags": [
+                  "-std=c++0x", '-D__STDC_LIMIT_MACROS',
+                  '-Wno-missing-field-initializers', '-Wno-extra',
+                  '-Wno-invalid-offsetof', '-Wno-ignored-qualifiers'
                 ],
-                'OTHER_CFLAGS': ['-std=gnu99'],
-              },
-              'conditions': [
-                ['OS=="mac"', {
-                  'xcode_settings': {
+              }],
+              ['OS in "linux android"', {
+                "defines": [
+                  "JS_HAVE_ENDIAN_H",
+                ],
+              }],
+              ['OS == "android"', {
+                "defines": [ 'OS_ANDROID', 'LEVELDB_PLATFORM_ANDROID' ]
+              }],
+              ['OS in "freebsd bsd"', {
+                "defines": [
+                  "JS_HAVE_MACHINE_ENDIAN_H",
+                ],
+              }],
+              ['OS=="ios" or OS=="mac"',
+              {
+                'defines': [
+                  'JS_HAVE_MACHINE_ENDIAN_H=1',
+                  'XP_MACOSX=1',
+                  'DARWIN=1',
+                ],
+                'xcode_settings': {
+                  'OTHER_CPLUSPLUSFLAGS': ['-std=c++11', '-stdlib=libstdc++',
+                    '-Wno-mismatched-tags', '-Wno-missing-field-initializers',
+                    '-Wno-unused-private-field', '-Wno-invalid-offsetof', '-Wno-ignored-qualifiers'
+                  ],
+                  'OTHER_CFLAGS': ['-std=gnu99'],
+                },
+                'conditions': [
+                  ['OS=="mac"', {
+                    'xcode_settings': {
                     'MACOSX_DEPLOYMENT_TARGET': '10.7',
                     #mozjs uses c++11 / libc++
                   }

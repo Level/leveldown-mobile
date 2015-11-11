@@ -1,9 +1,10 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 // JXcore uses this file to embed Leveldown
 
 #include <node.h>
 
 namespace leveldown {
-  extern void RegisterModule(JS_HANDLE_OBJECT_REF target);
+extern void RegisterModule(JS_HANDLE_OBJECT_REF target);
 }
 #endif

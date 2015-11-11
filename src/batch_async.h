@@ -3,7 +3,8 @@
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
  */
 
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 #ifndef LD_BATCH_ASYNC_H
 #define LD_BATCH_ASYNC_H
 
@@ -17,20 +18,17 @@
 namespace leveldown {
 
 class BatchWriteWorker : public AsyncWorker {
-public:
-  BatchWriteWorker (
-      Batch* batch
-    , NanCallback *callback
-  );
+ public:
+  BatchWriteWorker(Batch* batch, NanCallback* callback);
 
-  virtual ~BatchWriteWorker ();
-  virtual void Execute ();
+  virtual ~BatchWriteWorker();
+  virtual void Execute();
 
-private:
+ private:
   Batch* batch;
 };
 
-} // namespace leveldown
+}  // namespace leveldown
 
 #endif
 #endif

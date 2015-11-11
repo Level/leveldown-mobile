@@ -1,4 +1,5 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 /* Copyright (c) 2012-2015 LevelDOWN contributors
  * See list at <https://github.com/level/leveldown#contributing>
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
@@ -101,7 +102,7 @@ static void DisposeStringOrBufferFromSlice(JS_LOCAL_VALUE handle,
   leveldown::Database* database =                                   \
       node::ObjectWrap::Unwrap<leveldown::Database>(args.This());   \
   JS_LOCAL_OBJECT optionsObj;                                       \
-  JS_HANDLE_FUNCTION callback;                                       \
+  JS_HANDLE_FUNCTION callback;                                      \
   if (optionPos == -1 && args.IsFunction(callbackPos)) {            \
     callback = args.GetAsFunction(callbackPos);                     \
   } else if (optionPos != -1 && args.IsFunction(callbackPos - 1)) { \

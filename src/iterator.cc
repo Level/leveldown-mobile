@@ -1,4 +1,5 @@
-#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS)
+#if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
+    defined(JS_ENGINE_CHAKRA)
 /* Copyright (c) 2012-2015 LevelDOWN contributors
  * See list at <https://github.com/level/leveldown#contributing>
  * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
@@ -43,7 +44,7 @@ Iterator::Iterator(Database* database, uint32_t id, leveldb::Slice* start,
   if (!JS_IS_EMPTY(startHandle))
     JS_NAME_SET(obj, JS_STRING_ID("start"), startHandle);
 
-  persistentHandle = JS_NEW_PERSISTENT_OBJECT(obj);
+  JS_NEW_PERSISTENT_OBJECT(persistentHandle, obj);
 
   options = new leveldb::ReadOptions();
   options->fill_cache = fillCache;

@@ -1,8 +1,8 @@
 {
 	"name": "leveldown",
-	"version": "1.0.10",
+	"version": "1.1.0",
 	"author": "see github.com/Level",
-	"description": "Leveldown for Android and iOS",
+	"description": "Leveldown for Android, iOS and Windows UWP",
 	"company": "Level",
 	"website": "github.com/Level/leveldown-mobile",
 	"package": null,
