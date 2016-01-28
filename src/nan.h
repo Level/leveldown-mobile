@@ -294,9 +294,8 @@ class NanCallback {
     JS_LOCAL_OBJECT hobj = JS_OBJECT_FROM_PERSISTENT(handle);
     JS_LOCAL_VALUE val = JS_GET_INDEX(hobj, kCallbackIndex);
     JS_LOCAL_FUNCTION callback = JS_TYPE_AS_FUNCTION(val);
-    JS_LOCAL_OBJECT ret_val =
-        JS_VALUE_TO_OBJECT(node::MakeCallback(target, callback, argc, argv));
-    return JS_LEAVE_SCOPE(ret_val);
+    JS_HANDLE_VALUE rv = node::MakeCallback(target, callback, argc, argv);
+    return JS_LEAVE_SCOPE(rv);
   }
 };
 
