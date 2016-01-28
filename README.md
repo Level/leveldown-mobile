@@ -23,7 +23,7 @@ jx install leveldown-mobile
 A Low-level Node.js LevelDB binding
 -------------------------
 
-[![Build Status](https://secure.travis-ci.org/Level/leveldown.png)](http://travis-ci.org/Level/leveldown-mobile)
+[![Build Status](https://secure.travis-ci.org/Level/leveldown-mobile.png)](http://travis-ci.org/Level/leveldown-mobile)
 
 LevelDOWN was extracted from [LevelUP](https://github.com/level/levelup) and now serves as a stand-alone binding for LevelDB.
 
