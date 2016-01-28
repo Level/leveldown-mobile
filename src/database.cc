@@ -264,13 +264,20 @@ JS_METHOD_END
 JS_METHOD(Database, Put) {
   LD_METHOD_SETUP_COMMON(put, 2, 3)
 
-  JS_LOCAL_OBJECT keyHandle = JS_VALUE_TO_OBJECT(args.GetItem(0));
-  JS_LOCAL_OBJECT valueHandle = JS_VALUE_TO_OBJECT(args.GetItem(1));
+  JS_LOCAL_OBJECT keyHandle;
+  if (!args.IsNull(0) && !args.IsUndefined(0))
+    keyHandle = JS_VALUE_TO_OBJECT(GET_ARG(0));
+
+  JS_LOCAL_OBJECT valueHandle;
+  
+  if (!args.IsNull(1) && !args.IsUndefined(1))  
+    valueHandle = JS_VALUE_TO_OBJECT(GET_ARG(1));
+  
   LD_STRING_OR_BUFFER_TO_SLICE(key, keyHandle, key)
   LD_STRING_OR_BUFFER_TO_SLICE(value, valueHandle, value)
 
   bool sync = false;
-  if (JS_HAS_NAME(optionsObj, JS_STRING_ID("sync"))) {
+  if (!JS_IS_EMPTY(optionsObj) && JS_HAS_NAME(optionsObj, JS_STRING_ID("sync"))) {
     JS_LOCAL_VALUE obj_sync = JS_GET_NAME(optionsObj, JS_STRING_ID("sync"));
     sync = BOOLEAN_TO_STD(obj_sync);
   }
@@ -361,8 +368,9 @@ JS_METHOD(Database, Batch) {
 
   unsigned ln = JS_GET_ARRAY_LENGTH(array);
   for (unsigned int i = 0; i < ln; i++) {
-    JS_LOCAL_OBJECT obj = JS_VALUE_TO_OBJECT(JS_GET_INDEX(array, i));
-    if (!JS_IS_OBJECT(obj)) continue;
+    JS_LOCAL_VALUE val = JS_GET_INDEX(array, i);
+    if (!JS_IS_OBJECT(val)) continue;
+    JS_LOCAL_OBJECT obj = JS_VALUE_TO_OBJECT(val);
 
     JS_LOCAL_VALUE keyBuffer = JS_GET_NAME(obj, JS_STRING_ID("key"));
     JS_LOCAL_VALUE type = JS_GET_NAME(obj, JS_STRING_ID("type"));
@@ -461,7 +469,6 @@ JS_METHOD(Database, Iterator) {
   JS_LOCAL_OBJECT iteratorHandle =
       Iterator::NewInstance(_this, STD_TO_NUMBER(id), optionsObj);
   if (try_catch.HasCaught()) {
-    // NB: node::FatalException can segfault here if there is no room on stack.
     THROW_EXCEPTION("Fatal Error in Database::Iterator!");
   }
 

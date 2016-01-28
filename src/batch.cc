@@ -35,12 +35,13 @@ JS_METHOD(Batch, New) {
   Database* database = node::ObjectWrap::Unwrap<Database>(objwrap);
   JS_LOCAL_OBJECT optionsObj;
 
+  bool sync = false;
   if (args.Length() > 1 && args.IsObject(1)) {
     optionsObj = JS_VALUE_TO_OBJECT(args.GetItem(1));
+    JS_LOCAL_VALUE val = JS_GET_NAME(optionsObj, JS_STRING_ID("sync"));
+    sync = BOOLEAN_TO_STD(val);
   }
-
-  bool sync = BOOLEAN_TO_STD(JS_GET_NAME(optionsObj, JS_STRING_ID("sync")));
-
+  
   Batch* batch = new Batch(database, sync);
   batch->Wrap(obj);
 

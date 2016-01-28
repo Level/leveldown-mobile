@@ -1,4 +1,7 @@
 Note that we have filtered out commits related to new tags, updating changelog and we're also not listing any merge commits, i.e. we are only listing things that changed between versions.
+### 1.1.1 January 28 2016
+* Bug fixes
+
 ### 1.1.0 November 12 2015
 
 * Windows UWP support
