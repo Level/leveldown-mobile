@@ -227,7 +227,7 @@ JS_LOCAL_OBJECT Iterator::NewInstance(JS_LOCAL_OBJECT database,
       JS_TYPE_TO_LOCAL_FUNCTION_TEMPLATE(
           Iterator::jx_persistent.templates[com->threadId]);
 
-  if (JS_IS_EMPTY(optionsObj)) {
+  if (JS_IS_EMPTY(optionsObj) || JS_IS_NULL_OR_UNDEFINED(optionsObj)) {
     JS_HANDLE_VALUE argv[2] = {database, id};
     instance = JS_NEW_INSTANCE(JS_GET_FUNCTION(constructorHandle), 2, argv);
   } else {
@@ -392,7 +392,11 @@ JS_METHOD(Iterator, New) {
 
   JS_CLASS_NEW_INSTANCE(obj, Iterator);
 
-  JS_LOCAL_OBJECT shObj = JS_VALUE_TO_OBJECT(startHandle);
+  JS_LOCAL_OBJECT shObj;
+  
+  if (!JS_IS_EMPTY(startHandle) && !JS_IS_NULL_OR_UNDEFINED(startHandle))
+    shObj = JS_VALUE_TO_OBJECT(startHandle);
+  
   Iterator* iterator =
       new Iterator(database, (uint32_t)id->Int32Value(), start, end, reverse,
                    keys, values, limit, lt, lte, gt, gte, fillCache,

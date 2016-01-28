@@ -12,13 +12,11 @@
 #include <leveldb/slice.h>
 
 static inline size_t StringOrBufferLength(JS_LOCAL_VALUE val) {
-  if (JS_IS_EMPTY(val)) {
+  if (JS_IS_EMPTY(val) || JS_IS_NULL_OR_UNDEFINED(val)) {
     return 0;
   } else {
-    JS_LOCAL_OBJECT obj = JS_VALUE_TO_OBJECT(val);
-
-    if (node::Buffer::HasInstance(obj)) {
-      return node::Buffer::Length(obj);
+    if (node::Buffer::HasInstance(val)) {
+      return node::Buffer::Length(val);
     } else {
       JS_LOCAL_STRING str = JS_VALUE_TO_STRING(val);
       jxcore::JXString jstr(str);
@@ -35,12 +33,13 @@ static void DisposeStringOrBufferFromSlice(JS_PERSISTENT_OBJECT& handle,
   JS_ENTER_SCOPE_COM();
   JS_DEFINE_STATE_MARKER(com);
   if (!slice.empty()) {
-    if (JS_HAS_NAME(JS_TYPE_TO_LOCAL_OBJECT(handle), JS_STRING_ID("obj"))) {
+    if (!JS_IS_NULL(handle) && 
+        JS_HAS_NAME(JS_TYPE_TO_LOCAL_OBJECT(handle), JS_STRING_ID("obj"))) {
       JS_LOCAL_VALUE obj =
           JS_GET_NAME(JS_TYPE_TO_LOCAL_OBJECT(handle), JS_STRING_ID("obj"));
       if (!node::Buffer::HasInstance(obj)) delete[] slice.data();
     } else {
-      if (!node::Buffer::HasInstance(JS_TYPE_TO_LOCAL_OBJECT(handle)))
+      if (JS_IS_NULL(handle) || !node::Buffer::HasInstance(JS_TYPE_TO_LOCAL_OBJECT(handle)))
         delete[] slice.data();
     }
   }
@@ -62,11 +61,13 @@ static void DisposeStringOrBufferFromSlice(JS_LOCAL_VALUE handle,
   size_t to##Sz_;                                                             \
   char* to##Ch_;                                                              \
   {                                                                           \
-    JS_LOCAL_OBJECT __obj__ = JS_VALUE_TO_OBJECT(from);                       \
-    if (JS_IS_NULL_OR_UNDEFINED(__obj__)) {                                   \
+    JS_LOCAL_OBJECT __obj__;                                                  \
+    if (!JS_IS_EMPTY(from) && !JS_IS_NULL_OR_UNDEFINED(from))                 \
+      __obj__ = JS_VALUE_TO_OBJECT(from);                                     \
+    if (JS_IS_EMPTY(__obj__)) {                                               \
       to##Sz_ = 0;                                                            \
       to##Ch_ = 0;                                                            \
-    } else if (!JS_IS_EMPTY(__obj__) && node::Buffer::HasInstance(__obj__)) { \
+    } else if (node::Buffer::HasInstance(__obj__)) {                          \
       to##Sz_ = node::Buffer::Length(__obj__);                                \
       to##Ch_ = node::Buffer::Data(__obj__);                                  \
     } else {                                                                  \

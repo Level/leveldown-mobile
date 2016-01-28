@@ -237,10 +237,20 @@ class NanCallback {
   bool operator==(const NanCallback &other) const {
     JS_ENTER_SCOPE_WITH(com_->node_isolate);
     JS_DEFINE_STATE_MARKER(com_);
-    JS_LOCAL_OBJECT obj = JS_TYPE_TO_LOCAL_OBJECT(handle);
-    JS_LOCAL_VALUE a = JS_GET_INDEX(obj, kCallbackIndex);
-    JS_LOCAL_OBJECT other_obj = JS_TYPE_TO_LOCAL_OBJECT(other.handle);
-    JS_LOCAL_VALUE b = JS_GET_INDEX(other_obj, kCallbackIndex);
+    JS_LOCAL_VALUE a = JS_UNDEFINED();
+    
+    if (!JS_IS_NULL_OR_UNDEFINED(handle)) {
+      JS_LOCAL_OBJECT obj = JS_TYPE_TO_LOCAL_OBJECT(handle);
+      a = JS_GET_INDEX(obj, kCallbackIndex);
+    }
+    
+    JS_LOCAL_VALUE b = JS_UNDEFINED();
+    
+    if (!JS_IS_NULL_OR_UNDEFINED(other.handle)) {
+      JS_LOCAL_OBJECT other_obj = JS_TYPE_TO_LOCAL_OBJECT(other.handle);
+      b = JS_GET_INDEX(other_obj, kCallbackIndex);
+    }
+    
     return a->StrictEquals(b);
   }
 
@@ -334,8 +344,13 @@ class NanCallback {
 
   NAN_INLINE void SaveToPersistent(const char *key, JS_LOCAL_OBJECT &obj) {
     JS_DEFINE_STATE_MARKER(com_);
+
     JS_LOCAL_OBJECT handle = JS_TYPE_TO_LOCAL_OBJECT(persistentHandle);
-    JS_NAME_SET(handle, JS_STRING_ID(key), obj);
+    
+    if (!JS_IS_EMPTY(obj))
+      JS_NAME_SET(handle, JS_STRING_ID(key), obj);
+    else
+      JS_NAME_SET(handle, JS_STRING_ID(key), JS_NULL());
   }
 
   JS_LOCAL_OBJECT GetFromPersistent(const char *key) const {
