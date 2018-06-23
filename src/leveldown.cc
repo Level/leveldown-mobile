@@ -1,9 +1,5 @@
 #if defined(JS_ENGINE_V8) or defined(JS_ENGINE_MOZJS) or \
     defined(JS_ENGINE_CHAKRA)
-/* Copyright (c) 2012-2015 LevelDOWN contributors
- * See list at <https://github.com/level/leveldown#contributing>
- * MIT License <https://github.com/level/leveldown/blob/master/LICENSE.md>
- */
 
 #include <node.h>
 
