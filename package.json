@@ -13,22 +13,22 @@
   ],
   "main": "leveldown.js",
   "dependencies": {
-    "abstract-leveldown": "~2.1.0",
-    "bindings": "~1.2.1",
-    "fast-future": "~1.0.0"
+    "abstract-leveldown": "2.1.4",
+    "bindings": "1.2.1",
+    "fast-future": "1.0.2"
   },
   "devDependencies": {
-    "du": "~0.1.0",
+    "du": "0.1.0",
     "faucet": "0.0.1",
-    "mkfiletree": "~0.0.1",
-    "monotonic-timestamp": "~0.0.8",
-    "node-gyp": "~1.0.1",
-    "node-uuid": "~1.4.3",
-    "optimist": "~0.6.1",
-    "readfiletree": "~0.0.1",
-    "rimraf": "~2.2.8",
-    "slump": "~2.0.0",
-    "tape": "~4.0.0"
+    "mkfiletree": "0.0.1",
+    "monotonic-timestamp": "0.0.9",
+    "node-gyp": "1.0.3",
+    "node-uuid": "1.4.8",
+    "optimist": "0.6.1",
+    "readfiletree": "0.0.1",
+    "rimraf": "2.2.8",
+    "slump": "2.0.4",
+    "tape": "4.0.3"
   },
   "scripts": {
     "test": "tape test/*-test.js | faucet"
